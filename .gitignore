@@ -1,0 +1,18 @@
+syntax: glob
+
+.DS_Store
+
+*.OABK
+
+*.swp
+*~.nib
+
+build
+
+*.pbxuser
+*.mode?v?
+*.perspective
+*.perspectivev3
+xcuserdata
+
+*.tokens
