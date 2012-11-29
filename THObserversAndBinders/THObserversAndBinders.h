@@ -9,3 +9,4 @@
 #import <Foundation/Foundation.h>
 
 #import "THObserver.h"
+#import "THBinder.h"

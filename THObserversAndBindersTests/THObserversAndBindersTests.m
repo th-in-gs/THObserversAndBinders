@@ -10,6 +10,30 @@
 
 #import <THObserversAndBinders/THObserversAndBinders.h>
 
+@interface AddOneTransformer: NSValueTransformer
+
+@end
+
+@implementation AddOneTransformer
+
++ (Class)transformedValueClass
+{
+    return [NSNumber class];
+}
+
++ (BOOL)allowsReverseTransformation
+{
+    return NO;
+}
+
+- (id)transformedValue:(id)value
+{
+    return @([value integerValue] + 1);
+}
+
+@end
+
+
 @implementation THObserversAndBindersTests {
     BOOL test0ArgTargetActionCallbackTriggered;
     BOOL test1ArgTargetActionCallbackTriggered;
@@ -273,6 +297,90 @@
     STAssertTrue(test4ArgTargetActionCallbackTriggered, @"4 argument action not called as expected");
     
     [observer stopObserving];
+}
+
+#pragma mark -
+#pragma mark Binding
+
+- (void)testSimpleBinding
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@"testFromValue" forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@"testToValue" forKey:@"testToKey"];
+
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testToKey"];
+    
+    testFrom[@"testFromKey"] = @"changedValue";
+    
+    STAssertEqualObjects(testTo[@"testToKey"], @"changedValue", @"New value in to object is not correct");
+    
+    [binder stopBinding];
+}
+
+- (void)testStopBinding
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@"testFromValue" forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@"testToValue" forKey:@"testToKey"];
+    
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testFromKey"];
+    
+    [binder stopBinding];
+    
+    testFrom[@"testFromKey"] = @"changedValue";
+    
+    STAssertEqualObjects(testTo[@"testToKey"], @"testToValue", @"New value in to object has changed");
+}
+
+- (void)testSimpleKeypathBinding
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:[NSMutableDictionary dictionaryWithObject:@"testFromValue" forKey:@"testFromKey"]
+                                                                       forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:[NSMutableDictionary dictionaryWithObject:@"testToValue" forKey:@"testToKey"]
+                                                                     forKey:@"testToKey"];
+    
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey.testFromKey"
+                                         toObject:testTo keyPath:@"testToKey.testToKey"];
+    
+    testFrom[@"testFromKey"][@"testFromKey"] = @"changedValue";
+    
+    STAssertEqualObjects(testTo[@"testToKey"][@"testToKey"], @"changedValue", @"New value in to object is not correct");
+    
+    [binder stopBinding];
+}
+
+- (void)testBindingWithNSValueTransformer
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@1 forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@0 forKey:@"testToKey"];
+    
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testToKey"
+                        valueTransformer:[[AddOneTransformer alloc] init]];
+    
+    testFrom[@"testFromKey"] = @5;
+        
+    STAssertEqualObjects(testTo[@"testToKey"], @6, @"Transformed value in to object is not correct");
+    
+    [binder stopBinding];
+}
+
+- (void)testBindingWithTransformerBlock
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@1 forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@0 forKey:@"testToKey"];
+    
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testToKey"
+                              transformationBlock:^id(id value) {
+                                  return @([value integerValue] + 5);
+                              }];
+    
+    testFrom[@"testFromKey"] = @5;
+    
+    STAssertEqualObjects(testTo[@"testToKey"], @10, @"Transformed value in to object is not correct");
+    
+    [binder stopBinding];
 }
 
 @end

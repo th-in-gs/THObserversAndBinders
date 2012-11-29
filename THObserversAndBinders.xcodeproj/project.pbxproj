@@ -17,6 +17,8 @@
 		7D7830431667AA6800F83BC7 /* THObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D7830411667AA6800F83BC7 /* THObserver.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7D7830441667AA6800F83BC7 /* THObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7830421667AA6800F83BC7 /* THObserver.m */; };
 		7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7D7830481667E24E00F83BC7 /* THBinder.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D7830461667E24D00F83BC7 /* THBinder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7D7830491667E24E00F83BC7 /* THBinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7830471667E24D00F83BC7 /* THBinder.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +45,8 @@
 		7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = THObserversAndBindersTests.m; sourceTree = "<group>"; };
 		7D7830411667AA6800F83BC7 /* THObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THObserver.h; sourceTree = "<group>"; };
 		7D7830421667AA6800F83BC7 /* THObserver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THObserver.m; sourceTree = "<group>"; };
+		7D7830461667E24D00F83BC7 /* THBinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THBinder.h; sourceTree = "<group>"; };
+		7D7830471667E24D00F83BC7 /* THBinder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THBinder.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +107,8 @@
 				7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */,
 				7D7830411667AA6800F83BC7 /* THObserver.h */,
 				7D7830421667AA6800F83BC7 /* THObserver.m */,
+				7D7830461667E24D00F83BC7 /* THBinder.h */,
+				7D7830471667E24D00F83BC7 /* THBinder.m */,
 				7D78301B1667A93600F83BC7 /* Supporting Files */,
 			);
 			path = THObserversAndBinders;
@@ -144,6 +150,7 @@
 			files = (
 				7D7830431667AA6800F83BC7 /* THObserver.h in Headers */,
 				7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */,
+				7D7830481667E24E00F83BC7 /* THBinder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,6 +253,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D7830441667AA6800F83BC7 /* THObserver.m in Sources */,
+				7D7830491667E24E00F83BC7 /* THBinder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
