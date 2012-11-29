@@ -8,6 +8,4 @@
 
 #import <Foundation/Foundation.h>
 
-@interface THObserversAndBinders : NSObject
-
-@end
+#import "THObserver.h"

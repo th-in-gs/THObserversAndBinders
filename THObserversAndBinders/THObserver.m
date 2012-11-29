@@ -1,0 +1,241 @@
+//
+//  THObserver.m
+//  THObserversAndBinders
+//
+//  Created by James Montgomerie on 29/11/2012.
+//  Copyright (c) 2012 James Montgomerie. All rights reserved.
+//
+
+#import "THObserver.h"
+
+#import <objc/message.h>
+
+@implementation THObserver {
+    __weak id _observedObject;
+    NSString *_keyPath;
+    dispatch_block_t _block;
+}
+
+typedef enum THObserverBlockArgumentsKind {
+    THObserverBlockArgumentsNone,
+    THObserverBlockArgumentsOldAndNew,
+    THObserverBlockArgumentsChangeDictionary
+} THObserverBlockArgumentsKind;
+
+- (id)initForObject:(id)object
+            keyPath:(NSString *)keyPath
+            options:(NSKeyValueObservingOptions)options
+              block:(dispatch_block_t)block
+ blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
+{
+    if((self = [super init])) {
+        if(!object || !keyPath || !block) {
+            [NSException raise:NSInternalInconsistencyException format:@"Observation must have a valid object (%@), keyPath (%@) and block(%@)", object, keyPath, block];
+            self = nil;
+        } else {
+            _observedObject = object;
+            _keyPath = [keyPath copy];
+            _block = [block copy];
+                        
+            [_observedObject addObserver:self
+                              forKeyPath:_keyPath
+                                 options:options
+                                 context:(void *)blockArgumentsKind];
+        }
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    if(_observedObject) {
+        [self stopObserving];
+    }
+}
+
+- (void)stopObserving
+{
+    [_observedObject removeObserver:self forKeyPath:_keyPath];
+    _block = nil;
+    _keyPath = nil;
+    _observedObject = nil;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+    switch((THObserverBlockArgumentsKind)context) {
+        case THObserverBlockArgumentsNone:
+            ((THObserverBlock)_block)();
+            break;
+        case THObserverBlockArgumentsOldAndNew:
+            ((THObserverBlockWithOldAndNew)_block)(change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+            break;
+        case THObserverBlockArgumentsChangeDictionary:
+            ((THObserverBlockWithChangeDictionary)_block)(change);
+            break;
+        default:
+            [NSException raise:NSInternalInconsistencyException format:@"%s called on %@ with unrecognised context (%p)", __func__, self, context];
+    }
+}
+
+
+#pragma mark -
+#pragma mark Block-based observer construction.
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                  block:(THObserverBlock)block
+{
+    return [[self alloc] initForObject:object
+                               keyPath:keyPath
+                               options:0
+                                 block:(dispatch_block_t)block
+                    blockArgumentsKind:THObserverBlockArgumentsNone];
+}
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+         oldAndNewBlock:(THObserverBlockWithOldAndNew)block
+{
+    return [[self alloc] initForObject:object
+                               keyPath:keyPath
+                               options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew
+                                 block:(dispatch_block_t)block
+                    blockArgumentsKind:THObserverBlockArgumentsOldAndNew];
+}
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+            changeBlock:(THObserverBlockWithChangeDictionary)block
+{
+    return [[self alloc] initForObject:object
+                               keyPath:keyPath
+                               options:options
+                                 block:(dispatch_block_t)block
+                    blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
+}
+
+
+#pragma mark -
+#pragma mark Target-action based observer construction.
+
+static NSUInteger SelectorArgumentCount(SEL selector)
+{
+    NSUInteger argumentCount = 0;
+    
+    const char *selectorStringCursor = sel_getName(selector);
+    char ch;
+    while((ch = *selectorStringCursor)) {
+        if(ch == ':') {
+            ++argumentCount;
+        }
+        ++selectorStringCursor;
+    }
+    
+    return argumentCount;
+}
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+                 target:(id)target
+                 action:(SEL)action
+{
+    id ret = nil;
+    
+    __weak id wTarget = target;
+    __weak id wObject = object;
+
+    // Was doing this with an NSMethodSignature by calling
+    // [target methodForSelector:action], but that will fail if the method
+    // isn't defined on the target yet, beating ObjC's dynamism a bit.
+    // This looks a little hairier, but it won't fail (and is probably a lot
+    // more efficient anyway).
+    NSUInteger actionArgumentCount = SelectorArgumentCount(action);
+
+    dispatch_block_t block = nil;
+    THObserverBlockArgumentsKind blockArgumentsKind;
+    
+    switch(actionArgumentCount) {
+        case 0: {
+            block = [^{
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, action);
+                }
+            } copy];
+            blockArgumentsKind = THObserverBlockArgumentsNone;
+        }
+            break;
+        case 1: {
+            block = [^{
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, action, wObject);
+                }
+            } copy];
+            blockArgumentsKind = THObserverBlockArgumentsNone;
+        }
+            break;
+        case 2: {
+            NSString *myKeyPath = [keyPath copy];
+            block = [^{
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, action, wObject, myKeyPath);
+                }
+            } copy];
+            blockArgumentsKind = THObserverBlockArgumentsNone;
+        }
+            break;
+        case 3: {
+            NSString *myKeyPath = [keyPath copy];
+            block = [(dispatch_block_t)(^(NSDictionary *change) {
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, action, wObject, myKeyPath, change);
+                }
+            }) copy];
+            blockArgumentsKind = THObserverBlockArgumentsChangeDictionary;
+        }
+            break;
+        case 4: {
+            NSString *myKeyPath = [keyPath copy];
+            options |=  NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
+            block = [(dispatch_block_t)(^(id oldValue, id newValue) {
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, action, wObject, myKeyPath, oldValue, newValue);
+                }
+            }) copy];
+            blockArgumentsKind = THObserverBlockArgumentsOldAndNew;
+        }
+            break;
+        default:
+            [NSException raise:NSInternalInconsistencyException format:@"Incorrect number of arguments (%ld) in action for %s (should be 0 - 4)", (long)actionArgumentCount, __func__];
+    }
+    
+    if(block) {
+        ret = [[self alloc] initForObject:object
+                                  keyPath:keyPath
+                                  options:options
+                                    block:block
+                       blockArgumentsKind:blockArgumentsKind];
+    }
+    
+    return ret;
+}
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                 target:(id)target
+                 action:(SEL)action
+{
+    return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
+}
+
+@end

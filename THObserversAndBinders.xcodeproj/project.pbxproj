@@ -8,14 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		7D7830191667A93600F83BC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830181667A93600F83BC7 /* Foundation.framework */; };
-		7D78301E1667A93600F83BC7 /* THObserversAndBinders.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */; };
-		7D7830201667A93600F83BC7 /* THObserversAndBinders.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D78301F1667A93600F83BC7 /* THObserversAndBinders.m */; };
 		7D7830281667A93600F83BC7 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830271667A93600F83BC7 /* SenTestingKit.framework */; };
 		7D78302A1667A93600F83BC7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830291667A93600F83BC7 /* UIKit.framework */; };
 		7D78302B1667A93600F83BC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830181667A93600F83BC7 /* Foundation.framework */; };
 		7D78302E1667A93600F83BC7 /* libTHObserversAndBinders.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */; };
 		7D7830341667A93600F83BC7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7D7830321667A93600F83BC7 /* InfoPlist.strings */; };
 		7D7830371667A93600F83BC7 /* THObserversAndBindersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */; };
+		7D7830431667AA6800F83BC7 /* THObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D7830411667AA6800F83BC7 /* THObserver.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7D7830441667AA6800F83BC7 /* THObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7830421667AA6800F83BC7 /* THObserver.m */; };
+		7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,25 +29,11 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		7D7830131667A93600F83BC7 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/${PRODUCT_NAME}";
-			dstSubfolderSpec = 16;
-			files = (
-				7D78301E1667A93600F83BC7 /* THObserversAndBinders.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTHObserversAndBinders.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830181667A93600F83BC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7D78301C1667A93600F83BC7 /* THObserversAndBinders-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "THObserversAndBinders-Prefix.pch"; sourceTree = "<group>"; };
 		7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THObserversAndBinders.h; sourceTree = "<group>"; };
-		7D78301F1667A93600F83BC7 /* THObserversAndBinders.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = THObserversAndBinders.m; sourceTree = "<group>"; };
 		7D7830261667A93600F83BC7 /* THObserversAndBindersTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = THObserversAndBindersTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830271667A93600F83BC7 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		7D7830291667A93600F83BC7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
@@ -54,6 +41,8 @@
 		7D7830331667A93600F83BC7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7D7830351667A93600F83BC7 /* THObserversAndBindersTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THObserversAndBindersTests.h; sourceTree = "<group>"; };
 		7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = THObserversAndBindersTests.m; sourceTree = "<group>"; };
+		7D7830411667AA6800F83BC7 /* THObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THObserver.h; sourceTree = "<group>"; };
+		7D7830421667AA6800F83BC7 /* THObserver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THObserver.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,7 +101,8 @@
 			isa = PBXGroup;
 			children = (
 				7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */,
-				7D78301F1667A93600F83BC7 /* THObserversAndBinders.m */,
+				7D7830411667AA6800F83BC7 /* THObserver.h */,
+				7D7830421667AA6800F83BC7 /* THObserver.m */,
 				7D78301B1667A93600F83BC7 /* Supporting Files */,
 			);
 			path = THObserversAndBinders;
@@ -147,6 +137,18 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		7D7830401667A94400F83BC7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D7830431667AA6800F83BC7 /* THObserver.h in Headers */,
+				7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		7D7830141667A93600F83BC7 /* THObserversAndBinders */ = {
 			isa = PBXNativeTarget;
@@ -154,7 +156,7 @@
 			buildPhases = (
 				7D7830111667A93600F83BC7 /* Sources */,
 				7D7830121667A93600F83BC7 /* Frameworks */,
-				7D7830131667A93600F83BC7 /* CopyFiles */,
+				7D7830401667A94400F83BC7 /* Headers */,
 			);
 			buildRules = (
 			);
@@ -243,7 +245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7D7830201667A93600F83BC7 /* THObserversAndBinders.m in Sources */,
+				7D7830441667AA6800F83BC7 /* THObserver.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,6 +334,7 @@
 				GCC_PREFIX_HEADER = "THObserversAndBinders/THObserversAndBinders-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -344,6 +347,7 @@
 				GCC_PREFIX_HEADER = "THObserversAndBinders/THObserversAndBinders-Prefix.pch";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -357,6 +361,10 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "THObserversAndBinders/THObserversAndBinders-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"\"$(OBJROOT)/UninstalledProducts/include\"",
+					"\"$(TARGET_BUILD_DIR)/usr/local/lib/include\"",
+				);
 				INFOPLIST_FILE = "THObserversAndBindersTests/THObserversAndBindersTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = octest;
@@ -372,6 +380,10 @@
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "THObserversAndBinders/THObserversAndBinders-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"\"$(OBJROOT)/UninstalledProducts/include\"",
+					"\"$(TARGET_BUILD_DIR)/usr/local/lib/include\"",
+				);
 				INFOPLIST_FILE = "THObserversAndBindersTests/THObserversAndBindersTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = octest;
