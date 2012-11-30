@@ -42,9 +42,9 @@ I like this API. It's one simple call to set up an block that fires when a prope
 - Code is no longer messy. Observer functionality is easy to set up and tear down, and the observation itself is neatly encapsulated in clean blocks or action methods.
 - Observation lifetime management is really easy. The observation is just an object, and managing the lifetime of objects is intuitive.
 - It feels nice and looks clean in use. No messy prefixed methods etc.
---- Okay, I'll admit there is a little bit of monkeying with analysis of selectors and casting of blocks in `THObserver`'s implementation, but it's nicely encapsulated, and the code is reasonably straightforward.
+-- Okay, I'll admit there is a little bit of monkeying with analysis of selectors and casting of blocks in `THObserver`'s implementation, but it's nicely encapsulated, and the code is reasonably straightforward.
 
-On top of that, it seemed like it would be pretty easy to write a straightforward binding mechanism with a similar API, so I did. The THBinder object represents a binding, and is easy to construct and manage (see the [binding](#binding) examples). You can optionally supply an NSValueTransformer or a block to run the value through. Lifetime is managed simiarly to THObserver - it'll stop binding when it's released, and theres also a '-stopBinding' method.
+On top of that, it seemed like it would be pretty easy to write a straightforward binding mechanism with a similar API, so I did. The THBinder object represents a binding, and is easy to construct and manage (see the [binding](#binding) examples). You can optionally supply an NSValueTransformer or a block to run the value through. Lifetime is managed similarly to THObserver - it'll stop binding when it's released, and theres also a '-stopBinding' method.
 
 
 ## How to use it
