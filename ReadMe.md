@@ -1,9 +1,9 @@
 # THObserversAndBinders
 
-© 2012 James Montgomerie  
+© 2012 James Montgomerie
+[@th_in_gs](http://www.twitter.com/th_in_gs)
 jamie@montgomerie.net, [http://www.blog.montgomerie.net/](http://www.blog.montgomerie.net/)  
 jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http://th.ingsmadeoutofotherthin.gs/)  
-[@th_in_gs](http://www.twitter.com/th_in_gs)
 
 
 ## What it is
@@ -12,7 +12,7 @@ jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http:
 - Very lightweight object-based key-value binding (KVB).
 - For iOS and Mac OS X, with ARC.
 - Feels comfortable.
-- Here are some [examples].
+- Here are some [examples](#examples).
 
 
 ## Why
