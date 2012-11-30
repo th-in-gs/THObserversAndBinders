@@ -24,7 +24,7 @@ typedef id(^THBinderTransformationBlock)(id value);
    transformationBlock:(THBinderTransformationBlock)transformationBlock;
 
 // This is a one-way street. Call it to stop the observer functioning.
-// The will do this cleanly when it deallocs, but calling it manually
+// The THBinder will do this cleanly when it deallocs, but calling it manually
 // can be useful in ensuring an orderly teardown.
 - (void)stopBinding;
 

@@ -34,7 +34,7 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 #pragma mark Target-action based observers.
 
 // Target-action based observers take a selector with a signature with 0-4
-// arguments, and calls it like this:
+// arguments, and call it like this:
 //
 // 0 arguments: [target action];
 //
@@ -51,7 +51,8 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 //     automatically added to your options if they're not already there and you
 //     supply a 4-argument callback.
 //
-// The action should not return any value (i.e. should be declared to return void).
+// The action should not return any value (i.e. should be declared to return
+// void).
 //
 // Both the observer and the target are weakly referenced internally.
 
@@ -68,11 +69,14 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 
 
 // A second kind of target-action based observer; takes a selector with a
-// signature with 1-2 arguments, and calls it like this:
+// signature with 1-2 arguments, and call it like this:
 //
 // 1 argument:  [target actionWithNewValue:newValue];
 //
 // 2 arguments: [target actionWithOldValue:oldValue newValue:newValue];
+//
+// The action should not return any value (i.e. should be declared to return
+// void).
 //
 // Both the observer and the target are weakly referenced internally.
 
@@ -92,7 +96,7 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 #pragma mark Lifetime management
 
 // This is a one-way street. Call it to stop the observer functioning.
-// The will do this cleanly when it deallocs, but calling it manually
+// The THObserver will do this cleanly when it deallocs, but calling it manually
 // can be useful in ensuring an orderly teardown.
 - (void)stopObserving;
 
