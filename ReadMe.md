@@ -16,7 +16,7 @@ jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http:
 
 ## Why
 
-To me, Cocoa KVO has three problems:
+To me, Cocoa KVO has three problems (well, besides the conceptual arguments about whether KVO's good idea in the first place):
 
 - It makes your code messy. `-[(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context]` methods with huge flowing if statements in them. Need I say more?
 - Lifetime management is hard to think about and therefore fragile.
