@@ -9,7 +9,7 @@ jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http:
 
 - Easy, lightweight, object-based key-value observing (KVO).
 - Very lightweight object-based key-value binding (KVB).
-- For iOS and Mac OS X.
+- For iOS and Mac OS X, with ARC.
 - Feels comfortable.
 - Here are some [examples].
 
@@ -45,6 +45,11 @@ I like this API. It's one simple call to set up an block that fires when a prope
 --- Okay, I'll admit there is a little bit of monkeying with analysis of selectors and casting of blocks in `THObserver`'s implementation, but it's nicely encapsulated, and the code is reasonably straightforward.
 
 On top of that, it seemed like it would be pretty easy to write a straightforward binding mechanism with a similar API, so I did. The THBinder object represents a binding, and is easy to construct and manage (see the [binding] examples). You can optionally supply an NSValueTransformer or a block to run the value through. Lifetime is managed simiarly to THObserver - it'll stop binding when it's released, and theres also a '-stopBinding' method.
+
+
+## How to use it
+
+I've packaged this as a static library, you should be able to use it as detailed [here](http://www.blog.montgomerie.net/easy-xcode-static-library-subprojects-and-submodules).  It's only a few files though, so it you just copied and pasted them into your project I wouldn't tell anyone.
 
 
 ## Examples
