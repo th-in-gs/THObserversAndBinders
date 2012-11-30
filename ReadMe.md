@@ -63,7 +63,6 @@ I've packaged this as a static library, you should be able to use it as detailed
 THObserver *observer = [THObserver observerForObject:object keyPath:@"propertyToObserve" block:^{
     NSLog(@"propertyToObserve changed, is now %@", object.propertyToObserve);
 }];
-
 ```
 
 
