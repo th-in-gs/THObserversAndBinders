@@ -11,7 +11,7 @@ jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http:
 - Very lightweight object-based key-value binding (KVB).
 - For iOS and Mac OS X, with ARC.
 - Feels comfortable.
-- Here are some [examples].
+- Here are some [examples](#examples).
 
 
 ## Why
@@ -49,7 +49,7 @@ On top of that, it seemed like it would be pretty easy to write a straightforwar
 
 ## How to use it
 
-I've packaged this as a static library, you should be able to use it as detailed [here](http://www.blog.montgomerie.net/easy-xcode-static-library-subprojects-and-submodules).  It's only a few files though, so it you just copied and pasted them into your project I wouldn't tell anyone.
+I've packaged this as a static library, you should be able to use it as detailed [here](http://www.blog.montgomerie.net/easy-xcode-static-library-subprojects-and-submodules)
 
 
 ## Examples
@@ -58,33 +58,33 @@ I've packaged this as a static library, you should be able to use it as detailed
 
 #### Simple observation block:
 
-````
+```ObjC
     NSString *keyPath = @"propertyToObserve"
     THObserver *observer = [THObserver observerForObject:object keyPath:@"propertyToObserve" block:^{
         NSLog(@"propertyToObserve changed, is now %@", object.propertyToObserve);
     }];
-````
+```
 
 
 #### Observation block with the old and new value passed in:
 
-````
+```ObjC
     THObserver *observer = [THObserver observerForObject:observerForObject:object keyPath:@"propertyToObserve" oldAndNewBlock:^(id oldValue, id newValue) {
         NSLog(@"propertyToObserve changed, was %@, is now %@", oldValue, newValue);
     }];
-````
+```
 
 
 #### Observation block with custom observation options and a Cocoa change dictionary:
     
-````
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                                              changeBlock:^(NSDictionary *change) {
                                                  NSLog(@"propertyToObserve is %@", change[NSKeyValueChangeNewKey]);
                                              }];
-````
+```
 
 
 ### Target-action Based Observation
@@ -93,7 +93,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 #### Simple target-action:
     
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                   target:self
@@ -102,7 +102,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 #### Target-action, gets passed observed object
     
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                   target:self
@@ -111,7 +111,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 #### Target-action, gets passed observed object and keypath
     
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                   target:self
@@ -120,7 +120,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 #### Target-action, gets passed observed object, keypath, old and new values
     
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                   target:self
@@ -129,7 +129,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 #### Target-action with options and change dictionary:
 
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -142,7 +142,7 @@ Any of the calls below could be made with or without an 'options' argument.
 
 This supplies only the new value - useful in keeping code clean if you don't need the object and keypath passed in.
 
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -154,7 +154,7 @@ This supplies only the old and new values. Again, useful in keeping code clean (
 
 #### "Value action" target-action callback for old and new value only:
 
-```
+```ObjC
     THObserver *observer = [THObserver observerForObject:object
                                                  keyPath:@"propertyToObserve"
                                                  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
@@ -169,14 +169,14 @@ This supplies only the old and new values. Again, useful in keeping code clean (
 
 #### Simple binding:
 
-```
+```ObjC
     THBinder *binder = [THBinder binderFromObject:fromObject keyPath:@"fromKey"
                                          toObject:toObject keyPath:@"toKey"];
 ```
 
-#### Binding with TransformerBlock:
+#### Binding with a Transformer Block:
 
-```    
+```ObjC
     THBinder *binder = [THBinder binderFromObject:fromObject keyPath:@"fromKey"
                                          toObject:toObject keyPath:@"toKey"
                               transformationBlock:^id(id value) {
@@ -186,7 +186,7 @@ This supplies only the old and new values. Again, useful in keeping code clean (
 
 #### Binding with NSValueTransformer:
 
-```
+```ObjC
     THBinder *binder = [THBinder binderFromObject:fromObject keyPath:@"fromKey"
                                          toObject:toObject keyPath:@"toKey"
                                  valueTransformer:[[MyAddFiveTransformer alloc] init]];
