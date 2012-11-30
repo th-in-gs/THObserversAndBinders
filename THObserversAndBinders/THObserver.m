@@ -150,15 +150,15 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     __weak id wTarget = target;
     __weak id wObject = object;
 
+    dispatch_block_t block = nil;
+    THObserverBlockArgumentsKind blockArgumentsKind;
+
     // Was doing this with an NSMethodSignature by calling
     // [target methodForSelector:action], but that will fail if the method
     // isn't defined on the target yet, beating ObjC's dynamism a bit.
     // This looks a little hairier, but it won't fail (and is probably a lot
     // more efficient anyway).
     NSUInteger actionArgumentCount = SelectorArgumentCount(action);
-
-    dispatch_block_t block = nil;
-    THObserverBlockArgumentsKind blockArgumentsKind;
     
     switch(actionArgumentCount) {
         case 0: {
@@ -237,5 +237,68 @@ static NSUInteger SelectorArgumentCount(SEL selector)
 {
     return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
 }
+
+
+#pragma mark -
+#pragma mark Value-only target-action observers.
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+                 target:(id)target
+            valueAction:(SEL)valueAction
+{
+    id ret = nil;
+    
+    __weak id wTarget = target;
+
+    THObserverBlockWithChangeDictionary block = nil;
+    
+    NSUInteger actionArgumentCount = SelectorArgumentCount(valueAction);
+    
+    switch(actionArgumentCount) {
+        case 1: {
+            options |= NSKeyValueObservingOptionNew;
+            block = [^(NSDictionary *change) {
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, valueAction, change[NSKeyValueChangeNewKey]);
+                }
+            } copy];
+        }
+            break;
+        case 2: {
+            options |= NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew;
+            block = [^(NSDictionary *change) {
+                id target = wTarget;
+                if(target) {
+                    objc_msgSend(target, valueAction, change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+                }
+            } copy];
+        }
+            break;
+        default:
+            [NSException raise:NSInternalInconsistencyException format:@"Incorrect number of arguments (%ld) in action for %s (should be 1 - 2)", (long)actionArgumentCount, __func__];
+    }
+    
+    if(block) {
+        ret = [[self alloc] initForObject:object
+                                  keyPath:keyPath
+                                  options:options
+                                    block:(dispatch_block_t)block
+                       blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
+    }
+    
+    return ret;
+}
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                 target:(id)target
+            valueAction:(SEL)valueAction
+{
+    return [self observerForObject:object keyPath:keyPath options:0 target:target valueAction:valueAction];
+}
+
 
 @end

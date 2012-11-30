@@ -33,8 +33,8 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 #pragma mark -
 #pragma mark Target-action based observers.
 
-// Target-action based observers take a selector with a signature like with 0-4
-// arguments, and call it like this:
+// Target-action based observers take a selector with a signature with 0-4
+// arguments, and calls it like this:
 //
 // 0 arguments: [target action];
 //
@@ -65,6 +65,28 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
                 options:(NSKeyValueObservingOptions)options
                  target:(id)target
                  action:(SEL)action;
+
+
+// A second kind of target-action based observer; takes a selector with a
+// signature with 1-2 arguments, and calls it like this:
+//
+// 1 argument:  [target actionWithNewValue:newValue];
+//
+// 2 arguments: [target actionWithOldValue:oldValue newValue:newValue];
+//
+// Both the observer and the target are weakly referenced internally.
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                 target:(id)target
+            valueAction:(SEL)valueAction;
+
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+                 target:(id)target
+            valueAction:(SEL)valueAction;
+
 
 #pragma mark - 
 #pragma mark Lifetime management

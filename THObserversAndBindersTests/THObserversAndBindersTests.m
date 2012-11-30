@@ -41,6 +41,9 @@
     BOOL test3ArgTargetActionCallbackTriggered;
     BOOL test3ArgTargetActionPriorCallbackTriggered;
     BOOL test4ArgTargetActionCallbackTriggered;
+    
+    BOOL testTargetValueActionNewTrigered;
+    BOOL testTargetValueActionOldAndNewTrigered;
 }
 
 - (void)setUp
@@ -298,6 +301,54 @@
     
     [observer stopObserving];
 }
+
+- (void)_targetActionCallbackForNewValue:(id)value
+{
+    STAssertEqualObjects(value, @"changedValue", @"Object is not as expected");
+    
+    testTargetValueActionNewTrigered = YES;
+}
+
+- (void)test1ArgTargetValueAction
+{
+    NSMutableDictionary *test = [NSMutableDictionary dictionaryWithObject:@"testValue" forKey:@"testKey"];
+    
+    THObserver *observer = [THObserver observerForObject:test
+                                                 keyPath:@"testKey"
+                                                  target:self
+                                             valueAction:@selector(_targetActionCallbackForNewValue:)];
+    
+    test[@"testKey"] = @"changedValue";
+    
+    STAssertTrue(testTargetValueActionNewTrigered, @"1 argument action not called as expected");
+    
+    [observer stopObserving];
+}
+
+- (void)_targetActionCallbackForOldValue:(id)oldValue newValue:(id)newValue
+{
+    STAssertEqualObjects(oldValue, @"testValue", @"Object is not as expected");
+    STAssertEqualObjects(newValue, @"changedValue", @"Object is not as expected");
+    
+    testTargetValueActionOldAndNewTrigered = YES;
+}
+
+- (void)test2ArgTargetValueAction
+{
+    NSMutableDictionary *test = [NSMutableDictionary dictionaryWithObject:@"testValue" forKey:@"testKey"];
+    
+    THObserver *observer = [THObserver observerForObject:test
+                                                 keyPath:@"testKey"
+                                                  target:self
+                                             valueAction:@selector(_targetActionCallbackForOldValue:newValue:)];
+    
+    test[@"testKey"] = @"changedValue";
+    
+    STAssertTrue(testTargetValueActionOldAndNewTrigered, @"2 argument action not called as expected");
+    
+    [observer stopObserving];
+}
+
 
 #pragma mark -
 #pragma mark Binding

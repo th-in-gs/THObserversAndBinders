@@ -24,6 +24,7 @@ To me, Cocoa KVO has three problems:
 
 Now, it seems like every Cocoa programmer out there has their own KVO and KVB solution, and I've tried a few of them.  There are many to enumerate here.  Many are quite nice.  Many of them are quite nice, but I couldn't find any that passed the 'feels comfortable' test with flying colours (and, though I know it's irrational, but KVO just seems like it should be cleaner than a messily prefixed category on `NSObject`, `objc_setAssociatedObject()` or method swizzling).  
 
+
 ## How it works
 
 - Observers are represented by simple, lightweight `THObserver` objects that are constructed with an object to observe, a keypath to observe on the object, and a block or target-action pair to call when the observed value changes. Optionally, you can also pass arbitrary Cocoa KVO options.  The block or action can, again optionally, be passed the old and new value, or a whole Cocoa KVO change dictionary.
@@ -126,6 +127,32 @@ Any of the calls below could be made with or without an 'options' argument.
                                                   target:self
                                                   action:@selector(targetActionCallbackForObject:keyPath:oldValue:change:)];
 ```
+
+
+#### Target-action based callback for new value only:
+
+This supplies only the new value - useful in keeping code clean if you don't need the object and keypath passed in.
+
+```
+    THObserver *observer = [THObserver observerForObject:object
+                                                 keyPath:@"propertyToObserve"
+                                                 options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                                                  target:self
+                                             valueAction:@selector(targetActionCallbackForNewValue:)];
+```
+
+This supplies only the old and new values.  Again, useful in keeping code clean (see above).
+
+#### Target-action based callback for old and new values only:
+```
+    THObserver *observer = [THObserver observerForObject:object
+                                                 keyPath:@"propertyToObserve"
+                                                 options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                                                  target:self
+                                             valueAction:@selector(targetActionCallbackForOldValue:newValue:)];
+```
+
+
 
 
 ### Binding
