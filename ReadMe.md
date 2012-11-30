@@ -1,7 +1,6 @@
 # THObserversAndBinders
 
 © 2012 James Montgomerie  
-[@th_in_gs](http://www.twitter.com/th_in_gs)  
 jamie@montgomerie.net, [http://www.blog.montgomerie.net/](http://www.blog.montgomerie.net/)  
 jamie@th.ingsmadeoutofotherthin.gs, [http://th.ingsmadeoutofotherthin.gs/](http://th.ingsmadeoutofotherthin.gs/)  
 
