@@ -163,9 +163,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     switch(actionArgumentCount) {
         case 0: {
             block = [^{
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, action);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, action);
                 }
             } copy];
             blockArgumentsKind = THObserverBlockArgumentsNone;
@@ -173,9 +173,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
             break;
         case 1: {
             block = [^{
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, action, wObject);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, action, wObject);
                 }
             } copy];
             blockArgumentsKind = THObserverBlockArgumentsNone;
@@ -184,9 +184,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         case 2: {
             NSString *myKeyPath = [keyPath copy];
             block = [^{
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, action, wObject, myKeyPath);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, action, wObject, myKeyPath);
                 }
             } copy];
             blockArgumentsKind = THObserverBlockArgumentsNone;
@@ -195,9 +195,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         case 3: {
             NSString *myKeyPath = [keyPath copy];
             block = [(dispatch_block_t)(^(NSDictionary *change) {
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, action, wObject, myKeyPath, change);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, action, wObject, myKeyPath, change);
                 }
             }) copy];
             blockArgumentsKind = THObserverBlockArgumentsChangeDictionary;
@@ -207,9 +207,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
             NSString *myKeyPath = [keyPath copy];
             options |=  NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
             block = [(dispatch_block_t)(^(id oldValue, id newValue) {
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, action, wObject, myKeyPath, oldValue, newValue);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, action, wObject, myKeyPath, oldValue, newValue);
                 }
             }) copy];
             blockArgumentsKind = THObserverBlockArgumentsOldAndNew;
@@ -260,9 +260,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         case 1: {
             options |= NSKeyValueObservingOptionNew;
             block = [^(NSDictionary *change) {
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, valueAction, change[NSKeyValueChangeNewKey]);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, valueAction, change[NSKeyValueChangeNewKey]);
                 }
             } copy];
         }
@@ -270,9 +270,9 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         case 2: {
             options |= NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew;
             block = [^(NSDictionary *change) {
-                id target = wTarget;
-                if(target) {
-                    objc_msgSend(target, valueAction, change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, valueAction, change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
                 }
             } copy];
         }
