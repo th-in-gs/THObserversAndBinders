@@ -31,8 +31,11 @@ Now, it seems like every Cocoa programmer out there has their own KVO and KVB so
 - Optionally, you can also pass arbitrary Cocoa KVO options. 
 - The block or action can, again optionally, be passed the old and new value, or a whole Cocoa KVO change dictionary.
 - To keep code clean, there's also an option to use "value action" target-action callbacks that don't get passed the observed object and keypath like regular actions, but instead just get passed the new, or old and new, values.
-- The observation's lifetime is entirely managed by the `THObserver` object. Keep it around, the observation is alive. Release it, and the observations stop. You can also optionally stop them manually by calling `-stopObserving`.
-- The observed object and the target are weakly referenced, so nothing's going to blow up if you release things in the wrong order, or if your observer is being held in an autorelease pool somewhere (this isn't something I think should be necessary, but it's nice to have).
+- The observation's lifetime is entirely managed by the `THObserver` object. Keep it around, the observation is alive. Release it, and the observations stop. You can also stop them manually by calling `-stopObserving`.
+- The observed object and the target are weakly referenced by the `THObserver`.
+    - Nothing is going to blow up if the target object is released before the observer
+    - You _must_, however, still ensure that the `THObserver` object is deallocated, or that `-stopObserving` has been called on it, before the observed object is deallocated (otherwise the weak reference held by the observer gets zeroed out, and it has no chance to stop KVO-observing it. This makes Cocoa KVO very upset.).
+        - If your `THObserver`s are strongly held in instance variables of a parent object that also strongly holds the _observed_ object in an ivar, and you're expecting them both be implicitly released when the parent object deallocates, remember to explicitly call -stopObserving on the observers (or perhaps just set them to nil) in the parent object's -dealloc. This will ensure that they're guaranteed to stop observing before the observed object is released.
 
 I like this API. It's one simple call to set up an block that fires when a property changes. Want to observe a whole bunch of things? Just set up a bunch of`THObserver`s, store them in an array, then when it comes time to stop observing, release the array (maybe calling `-stopObserving` on the observers in the array first if there might be a reference to them lying around elsewhere, like in an autorelease pool).
 
@@ -202,3 +205,41 @@ THBinder *binder = [THBinder binderFromObject:fromObject keyPath:@"fromKey"
                                      toObject:toObject keyPath:@"toKey"
                              valueTransformer:[[MyAddFiveTransformer alloc] init]];
 ```
+
+
+
+### This stuff seems to be making a lot of retain cycles and leaks...
+
+I suspect you're doing something like this:
+
+```ObjC
+
+_observerIvar = [THObserver observerForObject:_objectIvar keyPath:@"propertyToObserve" block:^{
+    NSLog(@"propertyToObserve changed, is now %@", _objectIvar.propertyToObserve);
+}];
+
+```
+
+This will create a retain cycle.  The reference of `_objectIvar` inside the block will cause the block - and hence the observer - to strongly retain `self`.  The observer is in turn retained by `self` when you assign it to `_observerIvar`, creating the cycle (`self` retains `_observerIvar`, which retains the block, which retains `self`).
+
+You can instead do something like this:
+
+```ObjC
+MyObject *blockObject = _objectIvar;
+_observerIvar = [THObserver observerForObject:blockObject keyPath:@"propertyToObserve" block:^{
+    NSLog(@"propertyToObserve changed, is now %@", blockObject.propertyToObserve);
+}];
+```
+
+or:
+
+```ObjC
+__weak MySelf *weakSelf = self;
+_observerIvar = [THObserver observerForObject:self.objectProperty keyPath:@"propertyToObserve" block:^{
+    NSLog(@"propertyToObserve changed, is now %@", weakSelf.objectProperty.propertyToObserve);
+}];
+```
+
+And remember to ensure that the observer is not observing by the time that the object in _objectIvar is released (e.g. by calling `[_observerIvar stopObserving]` in your dealloc).
+
+(Thanks to Peter Steinberger for pointing out that this could use elucidation.)

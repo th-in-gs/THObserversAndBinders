@@ -149,6 +149,24 @@
     [observer stopObserving];
 }
 
+/*
+- (void)testPlainChangeReleasingObservedObject
+{
+    // This will cause KVO to complain.  It's something the user should not do 
+    // though - the observer should be released, or have -stopObserving called 
+    // on it, before the observed object is released.
+ 
+    THObserver *observer = nil;
+    
+    @autoreleasepool {
+        id object = [[NSObject alloc] init];
+        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+    }
+    
+    NSLog(@"%@", observer);
+}
+*/
+
 #pragma mark -
 #pragma mark Target-Action based observation
 
