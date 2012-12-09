@@ -73,7 +73,7 @@ THObserver *observer = [THObserver observerForObject:object keyPath:@"propertyTo
 
 ```ObjC
 
-THObserver *observer = [THObserver observerForObject:observerForObject:object keyPath:@"propertyToObserve" oldAndNewBlock:^(id oldValue, id newValue) {
+THObserver *observer = [THObserver observerForObject:object keyPath:@"propertyToObserve" oldAndNewBlock:^(id oldValue, id newValue) {
     NSLog(@"propertyToObserve changed, was %@, is now %@", oldValue, newValue);
 }];
 ```
