@@ -10,6 +10,12 @@
 
 #import <THObserversAndBinders/THObserversAndBinders.h>
 
+@interface NSObjectSubclass : NSObject
+@end
+
+@implementation NSObjectSubclass
+@end
+
 @interface AddOneTransformer: NSValueTransformer
 
 @end
@@ -149,13 +155,29 @@
     [observer stopObserving];
 }
 
-/*
-- (void)testPlainChangeReleasingObservedObject
+
+- (void)testPlainChangeReleasingObservedDictionary
 {
-    // This will cause KVO to complain.  It's something the user should not do 
-    // though - the observer should be released, or have -stopObserving called 
+    // This will cause KVO to complain.  It's something the user should not do
+    // though - the observer should be released, or have -stopObserving called
     // on it, before the observed object is released.
- 
+    
+    THObserver *observer = nil;
+    
+    @autoreleasepool {
+        id object = [[NSDictionary alloc] init];
+        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+    }
+    
+    NSLog(@"%@", observer);
+}
+
+- (void)testPlainChangeReleasingObservedNSObject
+{
+    // This will cause KVO to complain.  It's something the user should not do
+    // though - the observer should be released, or have -stopObserving called
+    // on it, before the observed object is released.
+    
     THObserver *observer = nil;
     
     @autoreleasepool {
@@ -165,7 +187,23 @@
     
     NSLog(@"%@", observer);
 }
-*/
+
+- (void)testPlainChangeReleasingObservedNSObjectSubclass
+{
+    // This will cause KVO to complain.  It's something the user should not do
+    // though - the observer should be released, or have -stopObserving called
+    // on it, before the observed object is released.
+    
+    THObserver *observer = nil;
+    
+    @autoreleasepool {
+        id object = [[NSObjectSubclass alloc] init];
+        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+    }
+    
+    NSLog(@"%@", observer);
+}
+
 
 #pragma mark -
 #pragma mark Target-Action based observation

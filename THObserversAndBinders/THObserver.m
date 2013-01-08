@@ -9,6 +9,13 @@
 #import "THObserver.h"
 
 #import <objc/message.h>
+#import <objc/runtime.h>
+
+//static const char *THObserverObservedObjectsKey = "THObserverObservedObjectsKey";
+
+@interface NSObject (THObserverSwizzledDealloc)
+- (void)th_observerSwizzledDealloc;
+@end
 
 @implementation THObserver {
     __weak id _observedObject;
@@ -21,6 +28,74 @@ typedef enum THObserverBlockArgumentsKind {
     THObserverBlockArgumentsOldAndNew,
     THObserverBlockArgumentsChangeDictionary
 } THObserverBlockArgumentsKind;
+
+static NSCountedSet *THObserverClassIsSwizzledSet()
+{
+    static NSCountedSet *sClassIsSwizzledSet;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sClassIsSwizzledSet = [[NSCountedSet alloc] init];
+    });
+    
+    return sClassIsSwizzledSet;
+}
+
+static NSMapTable *THObserverObjectsToObservers(void)
+{
+    static NSMapTable *sObjectsToObservers;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sObjectsToObservers = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPointerPersonality
+                                                    valueOptions:NSPointerFunctionsStrongMemory | NSPointerFunctionsObjectPointerPersonality];
+    });
+    
+    return sObjectsToObservers;
+}
+
+
+static void ReplacementDealloc(__unsafe_unretained id self, SEL cmd)
+{
+    NSHashTable *myObservers = nil;
+    
+    NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+    @synchronized(objectsToObservers) {
+        myObservers = [objectsToObservers objectForKey:self];
+        if(myObservers) {
+            [objectsToObservers removeObjectForKey:self];
+        }
+    }
+    
+    if(myObservers) {
+        // Note: there will not be any observers in this table if they've
+        // all stopped observing already.
+        for(THObserver *observer in myObservers) {
+            [observer stopObserving];
+        }
+        
+        // Undo the swizzling of dealloc if this is the last object of this class
+        // to be registered with a THObserver.
+        NSCountedSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
+        @synchronized(classIsSwizzledSet) {
+            Class myClass = [self class];
+            [classIsSwizzledSet removeObject:myClass];
+            if([classIsSwizzledSet countForObject:myClass] == 0) {
+                // Switch the original dealloc back (unfortunately, we can do nothing
+                // about removing the soon-to-be-identical th_observerSwizzledDealloc
+                // method);
+                Method deallocMethod = class_getInstanceMethod(myClass, @selector(th_observerSwizzledDealloc));
+                IMP originalImp = method_getImplementation(deallocMethod);
+                class_replaceMethod(myClass,
+                                    NSSelectorFromString(@"dealloc"),
+                                    originalImp,
+                                    method_getTypeEncoding(deallocMethod));
+            }
+        }
+    }
+
+    [self th_observerSwizzledDealloc];
+}
 
 - (id)initForObject:(id)object
             keyPath:(NSString *)keyPath
@@ -37,6 +112,40 @@ typedef enum THObserverBlockArgumentsKind {
             _keyPath = [keyPath copy];
             _block = [block copy];
                         
+            Class objectClass = [_observedObject class];
+            
+            NSCountedSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
+            @synchronized(classIsSwizzledSet)
+            {
+                [classIsSwizzledSet addObject:objectClass];
+                if([classIsSwizzledSet countForObject:objectClass] == 1) {
+                    SEL deallocSelector = NSSelectorFromString(@"dealloc");
+                    Method deallocMethod = class_getInstanceMethod(objectClass, NSSelectorFromString(@"dealloc"));
+                    IMP originalImp = method_getImplementation(deallocMethod);
+                    IMP replacementImp = (IMP)ReplacementDealloc;
+                    
+                    class_addMethod(objectClass,
+                                    @selector(th_observerSwizzledDealloc),
+                                    originalImp,
+                                    method_getTypeEncoding(deallocMethod));
+                    class_replaceMethod(objectClass,
+                                        deallocSelector,
+                                        replacementImp,
+                                        method_getTypeEncoding(deallocMethod));
+                }
+            }
+            
+            NSHashTable *myObservers;
+            NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+            @synchronized(objectsToObservers) {
+                myObservers = [objectsToObservers objectForKey:_observedObject];
+                if(!myObservers) {
+                    myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPersonality];
+                    [objectsToObservers setObject:myObservers forKey:object];
+                }
+            }
+            [myObservers addObject:self];
+            
             [_observedObject addObserver:self
                               forKeyPath:_keyPath
                                  options:options
@@ -58,6 +167,13 @@ typedef enum THObserverBlockArgumentsKind {
     [_observedObject removeObserver:self forKeyPath:_keyPath];
     _block = nil;
     _keyPath = nil;
+    
+    NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+    @synchronized(objectsToObservers) {
+        NSHashTable *myObservers = [objectsToObservers objectForKey:_observedObject];
+        [myObservers removeObject:self];
+    }
+    
     _observedObject = nil;
 }
 
