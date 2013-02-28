@@ -52,7 +52,7 @@ It seemed like it would be pretty easy to write a straightforward binding mechan
 
 ## How to use it
 
-I've packaged this as a static library, you should be able to use it as detailed [in this block post](http://www.blog.montgomerie.net/easy-xcode-static-library-subprojects-and-submodules).  It's only a couple of files though, so I won't tell anyone if you just copy them into your project instead.
+I've packaged this as a static library, you should be able to use it as detailed [in this blog post](http://www.blog.montgomerie.net/easy-xcode-static-library-subprojects-and-submodules).  It's only a couple of files though, so I won't tell anyone if you just copy them into your project instead.
 
 
 ## Examples
