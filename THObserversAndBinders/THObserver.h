@@ -75,6 +75,8 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 //
 // 2 arguments: [target actionWithOldValue:oldValue newValue:newValue];
 //
+// 3 arguments: [target actionForObject:object oldValue:oldValue newValue:newValue];
+//
 // The action should not return any value (i.e. should be declared to return
 // void).
 //
