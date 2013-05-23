@@ -76,6 +76,13 @@
                               transformationBlock:transformationBlock];
 }
 
-
++ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath toObject:(id)toObject keyPath:(NSString *)toKeyPath formatter:(NSFormatter *)formatter;
+{
+	return [[self alloc] initForBindingFromObject:fromObject keyPath:fromKeyPath
+                                         toObject:toObject keyPath:toKeyPath
+                              transformationBlock:^id(id value) {
+                                  return [formatter stringForObjectValue: value];
+                              }];
+}
 
 @end
