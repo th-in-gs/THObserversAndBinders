@@ -452,4 +452,24 @@
     [binder stopBinding];
 }
 
+- (void)testBindingWithFormatter
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@1 forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@0 forKey:@"testToKey"];
+
+	NSNumberFormatter *formatter = [NSNumberFormatter new];
+	formatter.numberStyle = NSNumberFormatterNoStyle;
+
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testToKey"
+										formatter:formatter];
+
+    testFrom[@"testFromKey"] = @5;
+
+    STAssertEqualObjects(testTo[@"testToKey"], @"5", @"Transformed value in to object is not correct");
+
+    [binder stopBinding];
+}
+
+
 @end
