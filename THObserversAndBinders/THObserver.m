@@ -82,6 +82,7 @@ typedef enum THObserverBlockArgumentsKind {
 
 - (void)stopObserving
 {
+    if (_observingStopped) return;
     _observingStopped = YES;
     [_observedObject removeObserver:self forKeyPath:_keyPath];
     _block = nil;
