@@ -10,6 +10,8 @@
 
 #import <objc/message.h>
 
+#import "NSObject+RSDeallocHandler.h"
+
 @implementation THObserver {
     __weak id _observedObject;
     NSString *_keyPath;
@@ -41,6 +43,22 @@ typedef enum THObserverBlockArgumentsKind {
                               forKeyPath:_keyPath
                                  options:options
                                  context:(void *)blockArgumentsKind];
+            
+            // Automatic unregistering when observed object dies
+            __typeof(self) __weak weakSelf = self;
+            __unsafe_unretained id unsafeObservedObject = _observedObject;
+            [_observedObject rs_addDeallocHandler:^{
+                __typeof(self) strongSelf = weakSelf;
+                if (strongSelf) {
+                    // weak reference to observed object used in stopObserving
+                    // is already nil, so we can not use it for removing KVO observer;
+                    // but unsafe reference still references just deallocated object,
+                    // so we can use it instead
+                    [unsafeObservedObject removeObserver:strongSelf forKeyPath:strongSelf->_keyPath];
+                    // cleaning up
+                    [strongSelf stopObserving];
+                }
+            } owner:self];
         }
     }
     return self;

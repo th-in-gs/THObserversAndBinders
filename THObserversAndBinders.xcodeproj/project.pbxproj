@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1AAF1824179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF1823179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m */; };
+		1AAF1829179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AAF1827179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h */; };
+		1AAF182A179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF1828179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m */; };
+		1AAF182C179AAF1200ABD685 /* NSObject+RSDeallocHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF1828179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m */; };
 		7D7830191667A93600F83BC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830181667A93600F83BC7 /* Foundation.framework */; };
 		7D7830281667A93600F83BC7 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830271667A93600F83BC7 /* SenTestingKit.framework */; };
 		7D78302A1667A93600F83BC7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830291667A93600F83BC7 /* UIKit.framework */; };
@@ -33,6 +37,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1AAF1822179AAAC400ABD685 /* THObserversAndBindersAutoUnregisterTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THObserversAndBindersAutoUnregisterTests.h; sourceTree = "<group>"; };
+		1AAF1823179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THObserversAndBindersAutoUnregisterTests.m; sourceTree = "<group>"; };
+		1AAF1827179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+RSDeallocHandler.h"; sourceTree = "<group>"; };
+		1AAF1828179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+RSDeallocHandler.m"; sourceTree = "<group>"; };
 		7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTHObserversAndBinders.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830181667A93600F83BC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7D78301C1667A93600F83BC7 /* THObserversAndBinders-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "THObserversAndBinders-Prefix.pch"; sourceTree = "<group>"; };
@@ -75,6 +83,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1AAF1825179AAE3900ABD685 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF1826179AAE5D00ABD685 /* RSDeallocHandler */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+		1AAF1826179AAE5D00ABD685 /* RSDeallocHandler */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF1827179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h */,
+				1AAF1828179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m */,
+			);
+			name = RSDeallocHandler;
+			path = Support/RSDeallocHandler/RSDeallocHandler;
+			sourceTree = "<group>";
+		};
 		7D78300A1667A93600F83BC7 = {
 			isa = PBXGroup;
 			children = (
@@ -82,6 +108,7 @@
 				7D7830501667ECEE00F83BC7 /* LICENSE */,
 				7D78301A1667A93600F83BC7 /* THObserversAndBinders */,
 				7D78302F1667A93600F83BC7 /* THObserversAndBindersTests */,
+				1AAF1825179AAE3900ABD685 /* Support */,
 				7D7830171667A93600F83BC7 /* Frameworks */,
 				7D7830161667A93600F83BC7 /* Products */,
 			);
@@ -132,6 +159,8 @@
 			children = (
 				7D7830351667A93600F83BC7 /* THObserversAndBindersTests.h */,
 				7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */,
+				1AAF1822179AAAC400ABD685 /* THObserversAndBindersAutoUnregisterTests.h */,
+				1AAF1823179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m */,
 				7D7830301667A93600F83BC7 /* Supporting Files */,
 			);
 			path = THObserversAndBindersTests;
@@ -156,6 +185,7 @@
 				7D7830431667AA6800F83BC7 /* THObserver.h in Headers */,
 				7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */,
 				7D7830481667E24E00F83BC7 /* THBinder.h in Headers */,
+				1AAF1829179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,6 +290,7 @@
 			files = (
 				7D7830441667AA6800F83BC7 /* THObserver.m in Sources */,
 				7D7830491667E24E00F83BC7 /* THBinder.m in Sources */,
+				1AAF182A179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +299,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D7830371667A93600F83BC7 /* THObserversAndBindersTests.m in Sources */,
+				1AAF1824179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m in Sources */,
+				1AAF182C179AAF1200ABD685 /* NSObject+RSDeallocHandler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
