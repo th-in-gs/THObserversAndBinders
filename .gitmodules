@@ -1,0 +1,3 @@
+[submodule "Support/RSDeallocHandler"]
+	path = Support/RSDeallocHandler
+	url = https://github.com/rabovik/RSDeallocHandler.git
