@@ -8,6 +8,7 @@
 
 #import "THBinder.h"
 #import "THObserver.h"
+#import "THObserver_Private.h"
 
 @implementation THBinder {
     THObserver *_observer;
@@ -34,10 +35,12 @@
             } copy];
         }
         
-        _observer = [THObserver observerForObject:fromObject
-                                          keyPath:fromKeyPath
-                                          options:NSKeyValueObservingOptionNew
-                                      changeBlock:changeBlock];
+        _observer = [[THObserver alloc] initForObject:fromObject
+                                              keyPath:fromKeyPath
+                                              options:NSKeyValueObservingOptionNew
+                                                block:(dispatch_block_t)changeBlock
+                                   blockArgumentsKind:THObserverBlockArgumentsChangeDictionary
+                                               target:toObject];
     }
     return self;
 }

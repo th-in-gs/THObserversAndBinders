@@ -7,6 +7,7 @@
 //
 
 #import "THObserver.h"
+#import "THObserver_Private.h"
 
 #import <objc/message.h>
 
@@ -18,12 +19,6 @@
     dispatch_block_t _block;
     BOOL _observingStopped;
 }
-
-typedef enum THObserverBlockArgumentsKind {
-    THObserverBlockArgumentsNone,
-    THObserverBlockArgumentsOldAndNew,
-    THObserverBlockArgumentsChangeDictionary
-} THObserverBlockArgumentsKind;
 
 - (id)initForObject:(id)object
             keyPath:(NSString *)keyPath

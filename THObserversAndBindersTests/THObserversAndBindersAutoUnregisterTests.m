@@ -7,6 +7,7 @@
 //
 
 #import "THObserver.h"
+#import "THBinder.h"
 #import "THObserversAndBindersAutoUnregisterTests.h"
 
 @interface THObserver (){
@@ -15,7 +16,16 @@
 }
 @end
 
-@implementation THObserversAndBindersAutoUnregisterTests
+@interface THBinder (){
+    @public
+    THObserver *_observer;
+}
+@end
+
+@implementation THObserversAndBindersAutoUnregisterTests{
+}
+
+#pragma mark - Observers
 
 -(void)testStopObservingNilsBlockIvar
 {
@@ -67,6 +77,74 @@
     }
     NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
     STAssertTrue(observer->_block == nil, @"StopObserving was not called");
+}
+
+#pragma mark - Bindings
+
+-(void)testStopBindingNilsBlockIvar
+{
+    THBinder *binder = [THBinder binderFromObject:[NSObject new]
+                                          keyPath:@"testKey"
+                                         toObject:[NSObject new]
+                                          keyPath:@"testKey"];
+    THObserver *observer = binder->_observer;
+    STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+    [binder stopBinding];
+    STAssertTrue(observer->_block == nil, @"Observers' block should be nil.");
+}
+
+-(void)testStopObservingCalledOnBindFromObjectDies
+{
+    THBinder *binder;
+    THObserver *observer;
+    NSObject *testTo = [NSObject new];
+    @autoreleasepool {
+        NSObject *testFrom = [NSObject new];
+        binder = [THBinder binderFromObject:testFrom
+                                    keyPath:@"testKey"
+                                   toObject:testTo
+                                    keyPath:@"testKey"];
+        observer = binder->_observer;
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+        NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
+    }
+    NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
+    STAssertTrue(observer->_block == nil, @"Observers' block should be nil.");
+}
+
+-(void)testStopObservingCalledOnBindToObjectDies
+{
+    THBinder *binder;
+    THObserver *observer;
+    NSObject *testFrom = [NSObject new];
+    @autoreleasepool {
+        NSObject *testTo = [NSObject new];
+        binder = [THBinder binderFromObject:testFrom
+                                    keyPath:@"testKey"
+                                   toObject:testTo
+                                    keyPath:@"testKey"];
+        observer = binder->_observer;
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+    }
+    STAssertTrue(observer->_block == nil, @"Observers' block should be nil.");
+}
+
+-(void)testSameBindToAndBindFromObjects
+{
+    THBinder *binder;
+    THObserver *observer;
+    @autoreleasepool {
+        NSObject *testObject = [NSObject new];
+        binder = [THBinder binderFromObject:testObject
+                                    keyPath:@"testKey1"
+                                   toObject:testObject
+                                    keyPath:@"testKey2"];
+        observer = binder->_observer;
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+        NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
+    }
+    NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
+    STAssertTrue(observer->_block == nil, @"Observers' block should be nil.");
 }
 
 @end

@@ -41,6 +41,7 @@
 		1AAF1823179AAAC500ABD685 /* THObserversAndBindersAutoUnregisterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THObserversAndBindersAutoUnregisterTests.m; sourceTree = "<group>"; };
 		1AAF1827179AAE5D00ABD685 /* NSObject+RSDeallocHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+RSDeallocHandler.h"; sourceTree = "<group>"; };
 		1AAF1828179AAE5D00ABD685 /* NSObject+RSDeallocHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+RSDeallocHandler.m"; sourceTree = "<group>"; };
+		1AAF182E179AC41700ABD685 /* THObserver_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = THObserver_Private.h; path = Private/THObserver_Private.h; sourceTree = "<group>"; };
 		7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTHObserversAndBinders.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830181667A93600F83BC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7D78301C1667A93600F83BC7 /* THObserversAndBinders-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "THObserversAndBinders-Prefix.pch"; sourceTree = "<group>"; };
@@ -101,6 +102,14 @@
 			path = Support/RSDeallocHandler/RSDeallocHandler;
 			sourceTree = "<group>";
 		};
+		1AAF182D179AC3E600ABD685 /* Private */ = {
+			isa = PBXGroup;
+			children = (
+				1AAF182E179AC41700ABD685 /* THObserver_Private.h */,
+			);
+			name = Private;
+			sourceTree = "<group>";
+		};
 		7D78300A1667A93600F83BC7 = {
 			isa = PBXGroup;
 			children = (
@@ -136,6 +145,7 @@
 		7D78301A1667A93600F83BC7 /* THObserversAndBinders */ = {
 			isa = PBXGroup;
 			children = (
+				1AAF182D179AC3E600ABD685 /* Private */,
 				7D78301D1667A93600F83BC7 /* THObserversAndBinders.h */,
 				7D7830411667AA6800F83BC7 /* THObserver.h */,
 				7D7830421667AA6800F83BC7 /* THObserver.m */,
