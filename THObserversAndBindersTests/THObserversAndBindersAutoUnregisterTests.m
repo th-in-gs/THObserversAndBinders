@@ -38,4 +38,19 @@
     STAssertTrue(observer->_block == nil, @"StopObserving was not called");
 }
 
+-(void)testStopObservingCalledOnTargetDies
+{
+    THObserver *observer;
+    NSObject *observedObject = [NSObject new];
+    @autoreleasepool {
+        id target = [NSObject new];
+        observer = [THObserver observerForObject:observedObject
+                                         keyPath:@"testKey"
+                                          target:target
+                                          action:@selector(testSelector)];
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+    }
+    STAssertTrue(observer->_block == nil, @"StopObserving was not called");
+}
+
 @end
