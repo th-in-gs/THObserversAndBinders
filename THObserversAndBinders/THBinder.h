@@ -12,6 +12,8 @@
 
 typedef id(^THBinderTransformationBlock)(id value);
 
+#pragma mark - Binders
+
 + (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
               toObject:(id)toObject keyPath:(NSString *)toKeyPath;
 
@@ -22,6 +24,21 @@ typedef id(^THBinderTransformationBlock)(id value);
 + (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
               toObject:(id)toObject keyPath:(NSString *)toKeyPath
    transformationBlock:(THBinderTransformationBlock)transformationBlock;
+
+#pragma mark Auto-lifetime binding
+
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath;
+
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath
+      valueTransformer:(NSValueTransformer *)valueTransformer;
+
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath
+   transformationBlock:(THBinderTransformationBlock)transformationBlock;
+
+#pragma mark - Lifetime management
 
 // This is a one-way street. Call it to stop the observer functioning.
 // The THBinder will do this cleanly when it deallocs, but calling it manually

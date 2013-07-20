@@ -8,6 +8,7 @@
 
 #import "THObserver.h"
 #import "THObserver_Private.h"
+#import "__THObserversStorage.h"
 
 #import <objc/message.h>
 
@@ -83,6 +84,7 @@
     _block = nil;
     _keyPath = nil;
     _observedObject = nil;
+    [__THObserversStorage removeObject:self];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -108,6 +110,8 @@
 
 #pragma mark -
 #pragma mark Block-based observer construction.
+
+#pragma mark └ observers
 
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
@@ -146,6 +150,35 @@
                                 target:nil];
 }
 
+#pragma mark └ auto-lifetime observation
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+            withBlock:(THObserverBlock)block
+{
+    THObserver *observer = [THObserver observerForObject:object keyPath:keyPath block:block];
+    [__THObserversStorage addObject:observer];
+}
+
++ (void)observeObject:(id)object
+            keyPath:(NSString *)keyPath
+ withOldAndNewBlock:(THObserverBlockWithOldAndNew)block
+{
+    THObserver *observer = [THObserver observerForObject:object keyPath:keyPath oldAndNewBlock:block];
+    [__THObserversStorage addObject:observer];
+}
+
++ (void)observeObject:(id)object
+            keyPath:(NSString *)keyPath
+            options:(NSKeyValueObservingOptions)options
+    withChangeBlock:(THObserverBlockWithChangeDictionary)block
+{
+    THObserver *observer = [THObserver observerForObject:object
+                                                 keyPath:keyPath
+                                                 options:options
+                                             changeBlock:block];
+    [__THObserversStorage addObject:observer];
+}
+
 
 #pragma mark -
 #pragma mark Target-action based observer construction.
@@ -165,6 +198,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     
     return argumentCount;
 }
+
+#pragma mark └ observers
 
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
@@ -266,9 +301,38 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
 }
 
+#pragma mark └ auto-lifetime observing
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+           withTarget:(id)target
+               action:(SEL)action
+{
+    [self observeObject:object
+                keyPath:keyPath
+                options:0
+             withTarget:target
+                 action:action];
+}
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+              options:(NSKeyValueObservingOptions)options
+           withTarget:(id)target
+               action:(SEL)action
+{
+    THObserver *observer = [self observerForObject:object
+                                           keyPath:keyPath
+                                           options:options
+                                            target:target
+                                            action:action];
+    [__THObserversStorage addObject:observer];
+}
 
 #pragma mark -
 #pragma mark Value-only target-action observers.
+
+#pragma mark └ observers
 
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
@@ -341,5 +405,32 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return [self observerForObject:object keyPath:keyPath options:0 target:target valueAction:valueAction];
 }
 
+#pragma mark └ auto-lifetime observation
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+           withTarget:(id)target
+          valueAction:(SEL)valueAction
+{
+    [self observeObject:object
+                keyPath:keyPath
+                options:0
+             withTarget:target
+            valueAction:valueAction];
+}
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+              options:(NSKeyValueObservingOptions)options
+           withTarget:(id)target
+          valueAction:(SEL)valueAction
+{
+    THObserver *observer = [self observerForObject:object
+                                           keyPath:keyPath
+                                           options:options
+                                            target:target
+                                       valueAction:valueAction];
+    [__THObserversStorage addObject:observer];
+}
 
 @end

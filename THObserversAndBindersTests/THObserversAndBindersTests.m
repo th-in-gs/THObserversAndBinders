@@ -320,6 +320,9 @@
     [observer stopObserving];
 }
 
+
+#pragma mark - Value-only target-action based observation
+
 - (void)_targetActionCallbackForNewValue:(id)value
 {
     STAssertEqualObjects(value, @"changedValue", @"Object is not as expected");
