@@ -22,6 +22,12 @@
 }
 @end
 
+@interface NSObjectSubclass : NSObject
+@end
+
+@implementation NSObjectSubclass
+@end
+
 @implementation THObserversAndBindersAutoUnregisterTests{
 }
 
@@ -40,6 +46,37 @@
     THObserver *observer = nil;
     @autoreleasepool {
         id object = [[NSObject alloc] init];
+        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+        NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
+    }
+    NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
+    STAssertTrue(observer->_block == nil, @"StopObserving was not called");
+}
+
+- (void)testPlainChangeReleasingObservedDictionary
+{
+    THObserver *observer = nil;
+    __weak id weakObject;
+    @autoreleasepool {
+        // We can not use empty dictionary [[NSDictionary alloc] init] in this test,
+        // because it acts like a singleton and never deallocated
+        id object = [NSDictionary dictionaryWithObject:@"testObject" forKey:@"testKey"];
+        weakObject = object;
+        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+        NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
+    }
+    NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
+    STAssertNil(weakObject, @"Dictionary was not deallocated!");
+    STAssertTrue(observer->_block == nil, @"StopObserving was not called");
+}
+
+- (void)testPlainChangeReleasingObservedNSObjectSubclass
+{
+    THObserver *observer = nil;
+    @autoreleasepool {
+        id object = [[NSObjectSubclass alloc] init];
         observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
         STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
         NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
