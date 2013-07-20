@@ -53,4 +53,20 @@
     STAssertTrue(observer->_block == nil, @"StopObserving was not called");
 }
 
+-(void)testSameTargetAndObservedObject
+{
+    THObserver *observer;
+    @autoreleasepool {
+        id object = [NSObject new];
+        observer = [THObserver observerForObject:object
+                                         keyPath:@"testKey"
+                                          target:object
+                                          action:@selector(testSelector)];
+        STAssertTrue(observer->_block != nil, @"Observers' block is nil.");
+        NSLog(@"↓↓↓↓↓↓↓↓↓ There sould be no `KVO leak` statement below ↓↓↓↓↓↓↓↓↓");
+    }
+    NSLog(@"↑↑↑↑↑↑↑↑↑ There sould be no `KVO leak` statement above ↑↑↑↑↑↑↑↑↑");
+    STAssertTrue(observer->_block == nil, @"StopObserving was not called");
+}
+
 @end
