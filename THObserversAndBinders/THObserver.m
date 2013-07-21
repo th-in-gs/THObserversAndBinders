@@ -7,26 +7,26 @@
 //
 
 #import "THObserver.h"
+#import "THObserver_Private.h"
+#import "__THObserversStorage.h"
 
 #import <objc/message.h>
+
+#import "NSObject+RSDeallocHandler.h"
 
 @implementation THObserver {
     __weak id _observedObject;
     NSString *_keyPath;
     dispatch_block_t _block;
+    BOOL _observingStopped;
 }
-
-typedef enum THObserverBlockArgumentsKind {
-    THObserverBlockArgumentsNone,
-    THObserverBlockArgumentsOldAndNew,
-    THObserverBlockArgumentsChangeDictionary
-} THObserverBlockArgumentsKind;
 
 - (id)initForObject:(id)object
             keyPath:(NSString *)keyPath
             options:(NSKeyValueObservingOptions)options
               block:(dispatch_block_t)block
  blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
+             target:(id)target // used for unregistering
 {
     if((self = [super init])) {
         if(!object || !keyPath || !block) {
@@ -41,6 +41,29 @@ typedef enum THObserverBlockArgumentsKind {
                               forKeyPath:_keyPath
                                  options:options
                                  context:(void *)blockArgumentsKind];
+            
+            // Automatic unregistering when observed object dies
+            __typeof(self) __weak weakSelf = self;
+            __unsafe_unretained id unsafeObservedObject = _observedObject;
+            [_observedObject rs_addDeallocHandler:^{
+                __typeof(self) strongSelf = weakSelf;
+                if (strongSelf && !strongSelf->_observingStopped) {
+                    // weak reference to observed object used in stopObserving
+                    // is already nil, so we can not use it for removing KVO observer;
+                    // but unsafe reference still references just deallocated object,
+                    // so we can use it instead
+                    [unsafeObservedObject removeObserver:strongSelf forKeyPath:strongSelf->_keyPath];
+                    // cleaning up
+                    [strongSelf stopObserving];
+                }
+            } owner:self];
+            
+            // Automatic unregistering when target dies
+            if (target) {
+                [target rs_addDeallocHandler:^{
+                    [weakSelf stopObserving];
+                } owner:self];
+            }
         }
     }
     return self;
@@ -55,10 +78,13 @@ typedef enum THObserverBlockArgumentsKind {
 
 - (void)stopObserving
 {
+    if (_observingStopped) return;
+    _observingStopped = YES;
     [_observedObject removeObserver:self forKeyPath:_keyPath];
     _block = nil;
     _keyPath = nil;
     _observedObject = nil;
+    [__THObserversStorage removeObject:self];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -85,6 +111,8 @@ typedef enum THObserverBlockArgumentsKind {
 #pragma mark -
 #pragma mark Block-based observer construction.
 
+#pragma mark └ observers
+
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
                   block:(THObserverBlock)block
@@ -93,7 +121,8 @@ typedef enum THObserverBlockArgumentsKind {
                                keyPath:keyPath
                                options:0
                                  block:(dispatch_block_t)block
-                    blockArgumentsKind:THObserverBlockArgumentsNone];
+                    blockArgumentsKind:THObserverBlockArgumentsNone
+                                target:nil];
 }
 
 + (id)observerForObject:(id)object
@@ -104,7 +133,8 @@ typedef enum THObserverBlockArgumentsKind {
                                keyPath:keyPath
                                options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew
                                  block:(dispatch_block_t)block
-                    blockArgumentsKind:THObserverBlockArgumentsOldAndNew];
+                    blockArgumentsKind:THObserverBlockArgumentsOldAndNew
+                                target:nil];
 }
 
 + (id)observerForObject:(id)object
@@ -116,7 +146,37 @@ typedef enum THObserverBlockArgumentsKind {
                                keyPath:keyPath
                                options:options
                                  block:(dispatch_block_t)block
-                    blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
+                    blockArgumentsKind:THObserverBlockArgumentsChangeDictionary
+                                target:nil];
+}
+
+#pragma mark └ auto-lifetime observation
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+            withBlock:(THObserverBlock)block
+{
+    THObserver *observer = [THObserver observerForObject:object keyPath:keyPath block:block];
+    [__THObserversStorage addObject:observer];
+}
+
++ (void)observeObject:(id)object
+            keyPath:(NSString *)keyPath
+ withOldAndNewBlock:(THObserverBlockWithOldAndNew)block
+{
+    THObserver *observer = [THObserver observerForObject:object keyPath:keyPath oldAndNewBlock:block];
+    [__THObserversStorage addObject:observer];
+}
+
++ (void)observeObject:(id)object
+            keyPath:(NSString *)keyPath
+            options:(NSKeyValueObservingOptions)options
+    withChangeBlock:(THObserverBlockWithChangeDictionary)block
+{
+    THObserver *observer = [THObserver observerForObject:object
+                                                 keyPath:keyPath
+                                                 options:options
+                                             changeBlock:block];
+    [__THObserversStorage addObject:observer];
 }
 
 
@@ -138,6 +198,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     
     return argumentCount;
 }
+
+#pragma mark └ observers
 
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
@@ -224,7 +286,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
                                   keyPath:keyPath
                                   options:options
                                     block:block
-                       blockArgumentsKind:blockArgumentsKind];
+                       blockArgumentsKind:blockArgumentsKind
+                                   target:target];
     }
     
     return ret;
@@ -238,9 +301,38 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
 }
 
+#pragma mark └ auto-lifetime observing
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+           withTarget:(id)target
+               action:(SEL)action
+{
+    [self observeObject:object
+                keyPath:keyPath
+                options:0
+             withTarget:target
+                 action:action];
+}
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+              options:(NSKeyValueObservingOptions)options
+           withTarget:(id)target
+               action:(SEL)action
+{
+    THObserver *observer = [self observerForObject:object
+                                           keyPath:keyPath
+                                           options:options
+                                            target:target
+                                            action:action];
+    [__THObserversStorage addObject:observer];
+}
 
 #pragma mark -
 #pragma mark Value-only target-action observers.
+
+#pragma mark └ observers
 
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
@@ -298,7 +390,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
                                   keyPath:keyPath
                                   options:options
                                     block:(dispatch_block_t)block
-                       blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
+                       blockArgumentsKind:THObserverBlockArgumentsChangeDictionary
+                                   target:target];
     }
     
     return ret;
@@ -312,5 +405,32 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return [self observerForObject:object keyPath:keyPath options:0 target:target valueAction:valueAction];
 }
 
+#pragma mark └ auto-lifetime observation
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+           withTarget:(id)target
+          valueAction:(SEL)valueAction
+{
+    [self observeObject:object
+                keyPath:keyPath
+                options:0
+             withTarget:target
+            valueAction:valueAction];
+}
+
++ (void)observeObject:(id)object
+              keyPath:(NSString *)keyPath
+              options:(NSKeyValueObservingOptions)options
+           withTarget:(id)target
+          valueAction:(SEL)valueAction
+{
+    THObserver *observer = [self observerForObject:object
+                                           keyPath:keyPath
+                                           options:options
+                                            target:target
+                                       valueAction:valueAction];
+    [__THObserversStorage addObject:observer];
+}
 
 @end

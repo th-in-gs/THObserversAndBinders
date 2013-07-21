@@ -8,6 +8,8 @@
 
 #import "THBinder.h"
 #import "THObserver.h"
+#import "THObserver_Private.h"
+#import "__THObserversStorage.h"
 
 @implementation THBinder {
     THObserver *_observer;
@@ -34,10 +36,12 @@
             } copy];
         }
         
-        _observer = [THObserver observerForObject:fromObject
-                                          keyPath:fromKeyPath
-                                          options:NSKeyValueObservingOptionNew
-                                      changeBlock:changeBlock];
+        _observer = [[THObserver alloc] initForObject:fromObject
+                                              keyPath:fromKeyPath
+                                              options:NSKeyValueObservingOptionNew
+                                                block:(dispatch_block_t)changeBlock
+                                   blockArgumentsKind:THObserverBlockArgumentsChangeDictionary
+                                               target:toObject];
     }
     return self;
 }
@@ -47,6 +51,8 @@
     [_observer stopObserving];
     _observer = nil;
 }
+
+#pragma mark - Binders
 
 + (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
               toObject:(id)toObject keyPath:(NSString *)toKeyPath
@@ -76,6 +82,33 @@
                               transformationBlock:transformationBlock];
 }
 
+#pragma mark Auto-lifetime binding
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath
+{
+    THBinder *binder = [self binderFromObject:fromObject keyPath:fromKeyPath
+                                     toObject:toObject keyPath:toKeyPath];
+    [__THObserversStorage addObject:binder->_observer];
+}
 
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath
+      valueTransformer:(NSValueTransformer *)valueTransformer
+{
+    THBinder *binder = [self binderFromObject:fromObject keyPath:fromKeyPath
+                                     toObject:toObject keyPath:toKeyPath
+                             valueTransformer:valueTransformer];
+    [__THObserversStorage addObject:binder->_observer];
+}
+
++ (void)bindFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+              toObject:(id)toObject keyPath:(NSString *)toKeyPath
+   transformationBlock:(THBinderTransformationBlock)transformationBlock
+{
+    THBinder *binder = [self binderFromObject:fromObject keyPath:fromKeyPath
+                                     toObject:toObject keyPath:toKeyPath
+                          transformationBlock:transformationBlock];
+    [__THObserversStorage addObject:binder->_observer];
+}
 
 @end
