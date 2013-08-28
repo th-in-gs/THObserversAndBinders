@@ -123,20 +123,14 @@ typedef enum THObserverBlockArgumentsKind {
 #pragma mark -
 #pragma mark Target-action based observer construction.
 
-static NSUInteger SelectorArgumentCount(SEL selector)
+static NSUInteger THSelectorArgumentCount(id target, SEL selector)
 {
-    NSUInteger argumentCount = 0;
+    Method method = class_getInstanceMethod([target class], selector);
+	NSInteger arguments = method_getNumberOfArguments(method);
     
-    const char *selectorStringCursor = sel_getName(selector);
-    char ch;
-    while((ch = *selectorStringCursor)) {
-        if(ch == ':') {
-            ++argumentCount;
-        }
-        ++selectorStringCursor;
-    }
+	NSCAssert(arguments >= 2, @"Wrong arguments"); /* 2 = self + _cmd */
     
-    return argumentCount;
+	return arguments - 2;
 }
 
 + (id)observerForObject:(id)object
@@ -158,7 +152,7 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     // isn't defined on the target yet, beating ObjC's dynamism a bit.
     // This looks a little hairier, but it won't fail (and is probably a lot
     // more efficient anyway).
-    NSUInteger actionArgumentCount = SelectorArgumentCount(action);
+    NSUInteger actionArgumentCount = THSelectorArgumentCount(target, action);
     
     switch(actionArgumentCount) {
         case 0: {
@@ -254,7 +248,7 @@ static NSUInteger SelectorArgumentCount(SEL selector)
 
     THObserverBlockWithChangeDictionary block = nil;
     
-    NSUInteger actionArgumentCount = SelectorArgumentCount(valueAction);
+    NSUInteger actionArgumentCount = THSelectorArgumentCount(target, valueAction);
     
     switch(actionArgumentCount) {
         case 1: {
