@@ -14,7 +14,7 @@
 //static const char *THObserverObservedObjectsKey = "THObserverObservedObjectsKey";
 
 @interface NSObject (THObserverSwizzledDealloc)
-- (void)th_observerSwizzledDealloc;
+- (void)th_observerSwizzledRelease;
 @end
 
 @implementation THObserver {
@@ -29,13 +29,13 @@ typedef enum THObserverBlockArgumentsKind {
     THObserverBlockArgumentsChangeDictionary
 } THObserverBlockArgumentsKind;
 
-static NSCountedSet *THObserverClassIsSwizzledSet()
+static NSMutableSet *THObserverClassIsSwizzledSet()
 {
-    static NSCountedSet *sClassIsSwizzledSet;
+    static NSMutableSet *sClassIsSwizzledSet;
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sClassIsSwizzledSet = [[NSCountedSet alloc] init];
+        sClassIsSwizzledSet = [[NSMutableSet alloc] init];
     });
     
     return sClassIsSwizzledSet;
@@ -55,46 +55,31 @@ static NSMapTable *THObserverObjectsToObservers(void)
 }
 
 
-static void ReplacementDealloc(__unsafe_unretained id self, SEL cmd)
+static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
 {
-    NSHashTable *myObservers = nil;
-    
-    NSMapTable *objectsToObservers = THObserverObjectsToObservers();
-    @synchronized(objectsToObservers) {
-        myObservers = [objectsToObservers objectForKey:self];
-        if(myObservers) {
-            [objectsToObservers removeObjectForKey:self];
-        }
-    }
-    
-    if(myObservers) {
-        // Note: there will not be any observers in this table if they've
-        // all stopped observing already.
-        for(THObserver *observer in myObservers) {
-            [observer stopObserving];
+    if(CFGetRetainCount((__bridge CFTypeRef)self) == 1) {
+        NSHashTable *myObservers = nil;
+        
+        NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+        @synchronized(objectsToObservers) {
+            myObservers = [objectsToObservers objectForKey:self];
+            if(myObservers) {
+                [objectsToObservers removeObjectForKey:self];
+            }
         }
         
-        // Undo the swizzling of dealloc if this is the last object of this class
-        // to be registered with a THObserver.
-        NSCountedSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
-        @synchronized(classIsSwizzledSet) {
-            Class myClass = [self class];
-            [classIsSwizzledSet removeObject:myClass];
-            if([classIsSwizzledSet countForObject:myClass] == 0) {
-                // Switch the original dealloc back (unfortunately, we can do nothing
-                // about removing the soon-to-be-identical th_observerSwizzledDealloc
-                // method);
-                Method deallocMethod = class_getInstanceMethod(myClass, @selector(th_observerSwizzledDealloc));
-                IMP originalImp = method_getImplementation(deallocMethod);
-                class_replaceMethod(myClass,
-                                    NSSelectorFromString(@"dealloc"),
-                                    originalImp,
-                                    method_getTypeEncoding(deallocMethod));
+        if(myObservers) {
+            // Note: there will not be any observers in this table if they've
+            // all stopped observing already.
+            for(THObserver *observer in myObservers) {
+                // Safe to call this because, even though it will remove itsself
+                // from the objectsToObservers map, we've alreafy done that.
+                [observer stopObserving];
             }
         }
     }
 
-    [self th_observerSwizzledDealloc];
+    [self th_observerSwizzledRelease];
 }
 
 - (id)initForObject:(id)object
@@ -111,27 +96,41 @@ static void ReplacementDealloc(__unsafe_unretained id self, SEL cmd)
             _observedObject = object;
             _keyPath = [keyPath copy];
             _block = [block copy];
-                        
+            
+            [_observedObject addObserver:self
+                              forKeyPath:_keyPath
+                                 options:options
+                                 context:(void *)blockArgumentsKind];
+
             Class objectClass = [_observedObject class];
             
-            NSCountedSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
+            NSMutableSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
             @synchronized(classIsSwizzledSet)
             {
-                [classIsSwizzledSet addObject:objectClass];
-                if([classIsSwizzledSet countForObject:objectClass] == 1) {
-                    SEL deallocSelector = NSSelectorFromString(@"dealloc");
-                    Method deallocMethod = class_getInstanceMethod(objectClass, NSSelectorFromString(@"dealloc"));
-                    IMP originalImp = method_getImplementation(deallocMethod);
-                    IMP replacementImp = (IMP)ReplacementDealloc;
+                if(![classIsSwizzledSet containsObject:objectClass]) {
+                    SEL releaseSelector = NSSelectorFromString(@"release");
+                    Method releaseMethod = class_getInstanceMethod(objectClass, releaseSelector);
                     
-                    class_addMethod(objectClass,
-                                    @selector(th_observerSwizzledDealloc),
-                                    originalImp,
-                                    method_getTypeEncoding(deallocMethod));
-                    class_replaceMethod(objectClass,
-                                        deallocSelector,
-                                        replacementImp,
-                                        method_getTypeEncoding(deallocMethod));
+                    IMP originalImp = method_getImplementation(releaseMethod);
+                    IMP replacementImp = (IMP)ReplacementRelease;
+                    
+                    // If these are equal, we already swizzled this class's
+                    // release by swizzling the release of a superclass that
+                    // it directly inherits its release from.
+                    if(originalImp != replacementImp) {
+                        const char *typeEncoding = method_getTypeEncoding(releaseMethod);
+                        
+                        class_addMethod(objectClass,
+                                        @selector(th_observerSwizzledRelease),
+                                        originalImp,
+                                        typeEncoding);
+                        
+                        class_replaceMethod(objectClass,
+                                            releaseSelector,
+                                            replacementImp,
+                                            typeEncoding);
+                    }
+                    [classIsSwizzledSet addObject:objectClass];
                 }
             }
             
@@ -143,13 +142,9 @@ static void ReplacementDealloc(__unsafe_unretained id self, SEL cmd)
                     myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPersonality];
                     [objectsToObservers setObject:myObservers forKey:object];
                 }
+                [myObservers addObject:self];
+                
             }
-            [myObservers addObject:self];
-            
-            [_observedObject addObserver:self
-                              forKeyPath:_keyPath
-                                 options:options
-                                 context:(void *)blockArgumentsKind];
         }
     }
     return self;
