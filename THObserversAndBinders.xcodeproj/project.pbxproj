@@ -20,6 +20,7 @@
 		7D7830481667E24E00F83BC7 /* THBinder.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D7830461667E24D00F83BC7 /* THBinder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7D7830491667E24E00F83BC7 /* THBinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D7830471667E24D00F83BC7 /* THBinder.m */; };
 		7D7830531667ED1000F83BC7 /* ReadMe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7D7830521667ED1000F83BC7 /* ReadMe.md */; };
+		7DD7F147171C528D00DE110E /* THOBTestSelfObservationTestObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DD7F146171C528D00DE110E /* THOBTestSelfObservationTestObject.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,8 @@
 		7D7830471667E24D00F83BC7 /* THBinder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THBinder.m; sourceTree = "<group>"; };
 		7D7830501667ECEE00F83BC7 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		7D7830521667ED1000F83BC7 /* ReadMe.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.md; sourceTree = "<group>"; wrapsLines = 1; };
+		7DD7F145171C528D00DE110E /* THOBTestSelfObservationTestObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THOBTestSelfObservationTestObject.h; sourceTree = "<group>"; };
+		7DD7F146171C528D00DE110E /* THOBTestSelfObservationTestObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THOBTestSelfObservationTestObject.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +135,8 @@
 			children = (
 				7D7830351667A93600F83BC7 /* THObserversAndBindersTests.h */,
 				7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */,
+				7DD7F145171C528D00DE110E /* THOBTestSelfObservationTestObject.h */,
+				7DD7F146171C528D00DE110E /* THOBTestSelfObservationTestObject.m */,
 				7D7830301667A93600F83BC7 /* Supporting Files */,
 			);
 			path = THObserversAndBindersTests;
@@ -268,6 +273,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D7830371667A93600F83BC7 /* THObserversAndBindersTests.m in Sources */,
+				7DD7F147171C528D00DE110E /* THOBTestSelfObservationTestObject.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

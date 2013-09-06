@@ -7,6 +7,7 @@
 //
 
 #import "THObserversAndBindersTests.h"
+#import "THOBTestSelfObservationTestObject.h"
 
 #import <THObserversAndBinders/THObserversAndBinders.h>
 
@@ -450,6 +451,15 @@
     STAssertEqualObjects(testTo[@"testToKey"], @10, @"Transformed value in to object is not correct");
     
     [binder stopBinding];
+}
+
+- (void)testSelfObservation
+{
+    THOBTestSelfObservationTestObject *object = [[THOBTestSelfObservationTestObject alloc] init];
+    NSLog(@"Test object: %@", object);
+    
+    // Wish this was not necessary
+    [object stopObserving];
 }
 
 @end
