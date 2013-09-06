@@ -495,9 +495,7 @@
 {
     THOBTestSelfObservationTestObject *object = [[THOBTestSelfObservationTestObject alloc] init];
     NSLog(@"Test object: %@", object);
-    
-    // Wish this was not necessary
-    [object stopObserving];
+    object.string = @"Setting the test string";
 }
 
 - (void)testBindingWithFormatter

@@ -12,6 +12,4 @@
 
 @property (nonatomic, copy) NSString *string;
 
-- (void)stopObserving;
-
 @end
