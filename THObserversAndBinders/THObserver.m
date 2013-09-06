@@ -393,6 +393,18 @@ static NSUInteger SelectorArgumentCount(SEL selector)
             } copy];
         }
             break;
+        case 3: {
+            __weak id wObject = object;
+
+            options |= NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew;
+            block = [^(NSDictionary *change) {
+                id msgTarget = wTarget;
+                if(msgTarget) {
+                    objc_msgSend(msgTarget, valueAction, wObject, change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+                }
+            } copy];
+        }
+            break;
         default:
             [NSException raise:NSInternalInconsistencyException format:@"Incorrect number of arguments (%ld) in action for %s (should be 1 - 2)", (long)actionArgumentCount, __func__];
     }

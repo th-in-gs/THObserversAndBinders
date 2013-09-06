@@ -7,6 +7,7 @@
 //
 
 #import "THObserversAndBindersTests.h"
+#import "THOBTestSelfObservationTestObject.h"
 
 #import <THObserversAndBinders/THObserversAndBinders.h>
 
@@ -487,6 +488,34 @@
     
     STAssertEqualObjects(testTo[@"testToKey"], @10, @"Transformed value in to object is not correct");
     
+    [binder stopBinding];
+}
+
+- (void)testSelfObservation
+{
+    THOBTestSelfObservationTestObject *object = [[THOBTestSelfObservationTestObject alloc] init];
+    NSLog(@"Test object: %@", object);
+    
+    // Wish this was not necessary
+    [object stopObserving];
+}
+
+- (void)testBindingWithFormatter
+{
+    NSMutableDictionary *testFrom = [NSMutableDictionary dictionaryWithObject:@1 forKey:@"testFromKey"];
+    NSMutableDictionary *testTo = [NSMutableDictionary dictionaryWithObject:@0 forKey:@"testToKey"];
+
+	NSNumberFormatter *formatter = [NSNumberFormatter new];
+	formatter.numberStyle = NSNumberFormatterNoStyle;
+
+    THBinder *binder = [THBinder binderFromObject:testFrom keyPath:@"testFromKey"
+                                         toObject:testTo keyPath:@"testToKey"
+										formatter:formatter];
+
+    testFrom[@"testFromKey"] = @5;
+
+    STAssertEqualObjects(testTo[@"testToKey"], @"5", @"Transformed value in to object is not correct");
+
     [binder stopBinding];
 }
 
