@@ -10,8 +10,7 @@
 
 #import <objc/message.h>
 #import <objc/runtime.h>
-
-//static const char *THObserverObservedObjectsKey = "THObserverObservedObjectsKey";
+#import <pthread.h>
 
 @interface NSObject (THObserverSwizzledDealloc)
 - (void)th_observerSwizzledRelease;
@@ -28,59 +27,6 @@ typedef enum THObserverBlockArgumentsKind {
     THObserverBlockArgumentsOldAndNew,
     THObserverBlockArgumentsChangeDictionary
 } THObserverBlockArgumentsKind;
-
-static NSMutableSet *THObserverClassIsSwizzledSet()
-{
-    static NSMutableSet *sClassIsSwizzledSet;
-    
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sClassIsSwizzledSet = [[NSMutableSet alloc] init];
-    });
-    
-    return sClassIsSwizzledSet;
-}
-
-static NSMapTable *THObserverObjectsToObservers(void)
-{
-    static NSMapTable *sObjectsToObservers;
-    
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sObjectsToObservers = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPointerPersonality
-                                                    valueOptions:NSPointerFunctionsStrongMemory | NSPointerFunctionsObjectPointerPersonality];
-    });
-    
-    return sObjectsToObservers;
-}
-
-
-static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
-{
-    if(CFGetRetainCount((__bridge CFTypeRef)self) == 1) {
-        NSHashTable *myObservers = nil;
-        
-        NSMapTable *objectsToObservers = THObserverObjectsToObservers();
-        @synchronized(objectsToObservers) {
-            myObservers = [objectsToObservers objectForKey:self];
-            if(myObservers) {
-                [objectsToObservers removeObjectForKey:self];
-            }
-        }
-        
-        if(myObservers) {
-            // Note: there will not be any observers in this table if they've
-            // all stopped observing already.
-            for(THObserver *observer in myObservers) {
-                // Safe to call this because, even though it will remove itsself
-                // from the objectsToObservers map, we've alreafy done that.
-                [observer stopObserving];
-            }
-        }
-    }
-
-    [self th_observerSwizzledRelease];
-}
 
 - (id)initForObject:(id)object
             keyPath:(NSString *)keyPath
@@ -102,49 +48,7 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
                                  options:options
                                  context:(void *)blockArgumentsKind];
 
-            Class objectClass = [_observedObject class];
-            
-            NSMutableSet *classIsSwizzledSet = THObserverClassIsSwizzledSet();
-            @synchronized(classIsSwizzledSet)
-            {
-                if(![classIsSwizzledSet containsObject:objectClass]) {
-                    SEL releaseSelector = NSSelectorFromString(@"release");
-                    Method releaseMethod = class_getInstanceMethod(objectClass, releaseSelector);
-                    
-                    IMP originalImp = method_getImplementation(releaseMethod);
-                    IMP replacementImp = (IMP)ReplacementRelease;
-                    
-                    // If these are equal, we already swizzled this class's
-                    // release by swizzling the release of a superclass that
-                    // it directly inherits its release from.
-                    if(originalImp != replacementImp) {
-                        const char *typeEncoding = method_getTypeEncoding(releaseMethod);
-                        
-                        class_addMethod(objectClass,
-                                        @selector(th_observerSwizzledRelease),
-                                        originalImp,
-                                        typeEncoding);
-                        
-                        class_replaceMethod(objectClass,
-                                            releaseSelector,
-                                            replacementImp,
-                                            typeEncoding);
-                    }
-                    [classIsSwizzledSet addObject:objectClass];
-                }
-            }
-            
-            NSHashTable *myObservers;
-            NSMapTable *objectsToObservers = THObserverObjectsToObservers();
-            @synchronized(objectsToObservers) {
-                myObservers = [objectsToObservers objectForKey:_observedObject];
-                if(!myObservers) {
-                    myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPersonality];
-                    [objectsToObservers setObject:myObservers forKey:object];
-                }
-                [myObservers addObject:self];
-                
-            }
+            [self _setUpMagicDeregistration];
         }
     }
     return self;
@@ -163,10 +67,19 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
     _block = nil;
     _keyPath = nil;
     
+    NSHashTable *myObservers;
+    
     NSMapTable *objectsToObservers = THObserverObjectsToObservers();
     @synchronized(objectsToObservers) {
-        NSHashTable *myObservers = [objectsToObservers objectForKey:_observedObject];
-        [myObservers removeObject:self];
+        myObservers = [objectsToObservers objectForKey:_observedObject];
+    }
+    
+    // myObservers may already be nil if we're being called from inside
+    // ReplacementRelease()
+    if(myObservers) {
+        @synchronized(myObservers) {
+            [myObservers removeObject:self];
+        }
     }
     
     _observedObject = nil;
@@ -192,6 +105,126 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
     }
 }
 
+#pragma mark -
+#pragma mark Magic Deregistration
+
+static NSMapTable *THObserverObjectsToObservers(void)
+{
+    static NSMapTable *sObjectsToObservers;
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sObjectsToObservers = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPointerPersonality
+                                                    valueOptions:NSPointerFunctionsStrongMemory | NSPointerFunctionsObjectPointerPersonality];
+    });
+    
+    return sObjectsToObservers;
+}
+
+static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
+{
+    if(CFGetRetainCount((__bridge CFTypeRef)self) == 1) {
+        NSHashTable *myObservers = nil;
+        
+        NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+        @synchronized(objectsToObservers) {
+            myObservers = [objectsToObservers objectForKey:self];
+            if(myObservers) {
+                [objectsToObservers removeObjectForKey:self];
+            }
+        }
+        
+        // No need to synchronize here - if two threads are causing the retain
+        // count to drop to 0 at the same time we have bigger problems...
+        if(myObservers) {
+            // Note: there will not be any observers in this table if they've
+            // all stopped observing already.
+            for(THObserver *observer in myObservers) {
+                // Safe to call this because, even though it will remove itsself
+                // from the objectsToObservers map, we've already done that.
+                [observer stopObserving];
+            }
+        }
+    }
+    
+    [self th_observerSwizzledRelease];
+}
+
+- (void)_setUpMagicDeregistration
+{
+    // We need to make sure that the KVO observation on the observed object is
+    // stopped _before_ its dealloc is called.
+    // The strategy here is to replace the implementation of -release with one
+    // that will, if the retain count is about to drop to 0, stop the
+    // observation, before calling the original -release, before the system
+    // calls -dealloc.
+    //
+    // This sounds like it may not work under ARC, but the ARC spec actually
+    // requires "valid object [s ...] with “well-behaved” retaining operations"
+    // See http://clang.llvm.org/docs/AutomaticReferenceCounting.html#retain-count-semantics
+    // and http://clang.llvm.org/docs/AutomaticReferenceCounting.html#retainable-object-pointers
+    //
+    // The only hairy part is depending on CFGetRetainCount working as expected
+    // (i.e. returning '1' inside the final call to release).  It seems like
+    // a safe bet that this won't change though.
+    
+    Class objectClass = [_observedObject class];
+    
+    // Usint a mutex because we can't just @synchronized(objectClass) - there
+    // might be another thread modifying a subclass or superclass at the same
+    // time.
+    static pthread_mutex_t sClassIsSwizzledMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&sClassIsSwizzledMutex);
+    {
+        // First, check if we've already swizzled this class (or a superclass).
+        const SEL swizzledReleaseSelector = @selector(th_observerSwizzledRelease);
+        if(!class_getInstanceMethod(objectClass, swizzledReleaseSelector)) {
+            const SEL releaseSelector = NSSelectorFromString(@"release");
+            const Method releaseMethod = class_getInstanceMethod(objectClass, releaseSelector);
+            
+            // Just in case my elaborate justification of why this is a valid
+            // thing to do under ARC is wrong, or changes, at least we'll
+            // know when this assertion fails.
+            NSParameterAssert(releaseMethod != NULL);
+            
+            const IMP originalImp = method_getImplementation(releaseMethod);
+            const IMP replacementImp = (IMP)ReplacementRelease;
+            
+            const char *typeEncoding = method_getTypeEncoding(releaseMethod);
+            
+            // Add a -th_observerSwizzledRelease method with the
+            // original release method's implementation.
+            class_addMethod(objectClass,
+                            swizzledReleaseSelector,
+                            originalImp,
+                            typeEncoding);
+            
+            // Replace the original release with our ReplacementRelease
+            // (which will call -th_observerSwizzledRelease when
+            // it's done to get the original -release code to run).
+            class_replaceMethod(objectClass,
+                                releaseSelector,
+                                replacementImp,
+                                typeEncoding);
+        }
+    }
+    pthread_mutex_unlock(&sClassIsSwizzledMutex);
+    
+    NSHashTable *myObservers;
+    
+    NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+    @synchronized(objectsToObservers) {
+        myObservers = [objectsToObservers objectForKey:_observedObject];
+        if(!myObservers) {
+            myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPersonality];
+            [objectsToObservers setObject:myObservers forKey:_observedObject];
+        }
+    }
+    
+    @synchronized(myObservers) {
+        [myObservers addObject:self];
+    }
+}
 
 #pragma mark -
 #pragma mark Block-based observer construction.
