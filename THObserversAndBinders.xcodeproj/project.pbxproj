@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7D25B42C17DE17000097B06E /* THOBTestDeallocationVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D25B42B17DE17000097B06E /* THOBTestDeallocationVerifier.m */; };
 		7D7830191667A93600F83BC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830181667A93600F83BC7 /* Foundation.framework */; };
 		7D7830281667A93600F83BC7 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830271667A93600F83BC7 /* SenTestingKit.framework */; };
 		7D78302A1667A93600F83BC7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830291667A93600F83BC7 /* UIKit.framework */; };
@@ -34,6 +35,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7D25B42A17DE17000097B06E /* THOBTestDeallocationVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = THOBTestDeallocationVerifier.h; sourceTree = "<group>"; };
+		7D25B42B17DE17000097B06E /* THOBTestDeallocationVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = THOBTestDeallocationVerifier.m; sourceTree = "<group>"; };
 		7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTHObserversAndBinders.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830181667A93600F83BC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7D78301C1667A93600F83BC7 /* THObserversAndBinders-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "THObserversAndBinders-Prefix.pch"; sourceTree = "<group>"; };
@@ -135,6 +138,8 @@
 			children = (
 				7D7830351667A93600F83BC7 /* THObserversAndBindersTests.h */,
 				7D7830361667A93600F83BC7 /* THObserversAndBindersTests.m */,
+				7D25B42A17DE17000097B06E /* THOBTestDeallocationVerifier.h */,
+				7D25B42B17DE17000097B06E /* THOBTestDeallocationVerifier.m */,
 				7DD7F145171C528D00DE110E /* THOBTestSelfObservationTestObject.h */,
 				7DD7F146171C528D00DE110E /* THOBTestSelfObservationTestObject.m */,
 				7D7830301667A93600F83BC7 /* Supporting Files */,
@@ -273,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D7830371667A93600F83BC7 /* THObserversAndBindersTests.m in Sources */,
+				7D25B42C17DE17000097B06E /* THOBTestDeallocationVerifier.m in Sources */,
 				7DD7F147171C528D00DE110E /* THOBTestSelfObservationTestObject.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

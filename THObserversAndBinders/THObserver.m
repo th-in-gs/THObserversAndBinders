@@ -12,7 +12,14 @@
 #import <objc/runtime.h>
 
 @implementation THObserver {
-    __weak id _observedObject;
+    // The reason this is __unsafe_unretained, rather than __weak, is so that
+    // it's still valid when our magic deregistration routines, called from
+    // the observed object's dealloc, fire.  If we use __weak, it's zeroed out
+    // before our coude runs.
+    // This is still a weak reference in effect, because it'll be zeroed out
+    // manually when the deregistration routines run.
+    __unsafe_unretained id _observedObject;
+    
     NSString *_keyPath;
     dispatch_block_t _block;
 }
@@ -62,6 +69,10 @@ typedef enum THObserverBlockArgumentsKind {
     _block = nil;
     _keyPath = nil;
     
+    // Remove ourselves from the list of active observers of this object (the
+    // list that's used to to remove observers when an object deallocates - see
+    // the "Magic Deregistration" implementation for, below, for more
+    // explanation).
     NSHashTable *myObservers;
     
     NSMapTable *objectsToObservers = THObserverObjectsToObservers();
@@ -69,8 +80,8 @@ typedef enum THObserverBlockArgumentsKind {
         myObservers = [objectsToObservers objectForKey:_observedObject];
     }
     
-    // myObservers may already be nil if we're being called from inside
-    // ReplacementRelease()
+    // if() because myObservers may be nil if we're being called from inside
+    // ReplacementDealloc()
     if(myObservers) {
         @synchronized(myObservers) {
             [myObservers removeObject:self];
@@ -103,14 +114,14 @@ typedef enum THObserverBlockArgumentsKind {
 #pragma mark -
 #pragma mark Magic Deregistration
 
-static NSMutableSet *THObserverReleaseSwizzledClasses(void)
+static NSMutableSet *THObserverDeallocSwizzledClasses(void)
 {
-    static NSMutableSet *sReleaseSwizzledClasses;
+    static NSMutableSet *sDeallocSwizzledClasses;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sReleaseSwizzledClasses = [NSMutableSet set];
+        sDeallocSwizzledClasses = [NSMutableSet set];
     });
-    return sReleaseSwizzledClasses;
+    return sDeallocSwizzledClasses;
 }
 
 static NSMapTable *THObserverObjectsToObservers(void)
@@ -126,30 +137,30 @@ static NSMapTable *THObserverObjectsToObservers(void)
     return sObjectsToObservers;
 }
 
-static void ReplacementRelease(__unsafe_unretained id self)
+static void ReplacementDealloc(__unsafe_unretained id self)
 {
-    if(CFGetRetainCount((__bridge CFTypeRef)self) == 1) {
-        NSHashTable *myObservers = nil;
-        
-        NSMapTable *objectsToObservers = THObserverObjectsToObservers();
-        @synchronized(objectsToObservers) {
-            myObservers = [objectsToObservers objectForKey:self];
-            if(myObservers) {
-                [objectsToObservers removeObjectForKey:self];
-            }
-        }
-        
-        // No need to synchronize here - if two threads are causing the retain
-        // count to drop to 0 at the same time we have bigger problems...
+    NSHashTable *myObservers = nil;
+    
+    NSMapTable *objectsToObservers = THObserverObjectsToObservers();
+    @synchronized(objectsToObservers) {
+        myObservers = [objectsToObservers objectForKey:self];
         if(myObservers) {
-            // Note: there will not be any observers in this table if they've
-            // all stopped observing already.
-            for(THObserver *observer in myObservers) {
-                // Safe to call this because, even though it will remove itsself
-                // from the objectsToObservers map, we've already done that.
-                [observer stopObserving];
-            }
+            [objectsToObservers removeObjectForKey:self];
         }
+    }
+    
+    // No need to synchronize access to myObservers here - by this time, the
+    // only place myObservers is accessed is inside dealloc, and that's not
+    // going to be running concurrently with itsself.
+
+    // Note: there will not be any observers in this table if they've
+    // all stopped observing already
+    for(THObserver *observer in myObservers) {
+        // It's safe to call -stopObserving even though it will try to remove
+        // the observer from the myObservers map table because when it looks up
+        // the myObservers map table in objectsToObservers it's going to get
+        // nil back, because we already removed it, above.
+        [observer stopObserving];
     }
 }
 
@@ -157,74 +168,80 @@ static void ReplacementRelease(__unsafe_unretained id self)
 {
     // We need to make sure that the KVO observation on the observed object is
     // stopped _before_ its dealloc is called.
-    // The strategy here is to replace the implementation of -release with one
-    // that will, if the retain count is about to drop to 0, stop the
-    // observation, before calling the original -release, before the system
-    // calls -dealloc.
-    //
-    // This sounds like it may not work under ARC, but the ARC spec actually
-    // requires "valid object [s ...] with “well-behaved” retaining operations"
-    // See http://clang.llvm.org/docs/AutomaticReferenceCounting.html#retain-count-semantics
-    // and http://clang.llvm.org/docs/AutomaticReferenceCounting.html#retainable-object-pointers
-    //
-    // The only hairy part is depending on CFGetRetainCount working as expected
-    // (i.e. returning '1' inside the final call to release).  It seems like
-    // a safe bet that this won't change though.
+    
+    // The strategy here is to replace the implementation of -dealloc with one
+    // that will deregister any observers before calling the original dealloc.
+    // This must be done _after_ the observation is added so that KVO can do
+    // its magic before we do our raplacement, so that our replacement is
+    // guaranteed to run first.
     
     Class objectClass = [_observedObject class];
     
-    NSMutableSet *releaseSwizzledClasses = THObserverReleaseSwizzledClasses();
-    @synchronized(releaseSwizzledClasses) {
-        if(![releaseSwizzledClasses containsObject:objectClass]) {
-            const SEL releaseSelector = NSSelectorFromString(@"release");
-            const Method releaseMethod = class_getInstanceMethod(objectClass, releaseSelector);
-            
-            // Just in case my elaborate justification of why this is a valid
-            // thing to do under ARC is wrong, or changes, at least we'll
-            // know when this assertion fails.
-            NSParameterAssert(releaseMethod != NULL);
+    // We only need to do this once per class, so we store what classed we've
+    // already done it to in deallocSwizzledClasses.
+    NSMutableSet *deallocSwizzledClasses = THObserverDeallocSwizzledClasses();
+    @synchronized(deallocSwizzledClasses) {
+        if(![deallocSwizzledClasses containsObject:objectClass]) {
+            const SEL deallocSelector = NSSelectorFromString(@"dealloc");
 
-            // To keep things thread-safe, we fill in the originalRelease later,
-            // with the result of the class_replaceMethod call.
-            __block IMP originalRelease;
+            // To keep things thread-safe, we fill in the originalDealloc later,
+            // with the result of the class_replaceMethod call (see more comments
+            // below).
+            __block IMP originalDealloc;
             
-            IMP doRelease = imp_implementationWithBlock(^(__unsafe_unretained id impSelf) {
-                ReplacementRelease(impSelf);
+            IMP replacementDeallocImp = imp_implementationWithBlock(^(__unsafe_unretained id impSelf) {
+                ReplacementDealloc(impSelf);
                 
-                if(originalRelease) {
-                    // If there was a release at the time we replaced it with
-                    // this block, call it.  It will call [super release];.
+                if(originalDealloc) {
+                    // If there was a dealloc at the time we replaced it with
+                    // this block, call it.  It will call [super dealloc] at its
+                    // end, we don't need to worry about that.
     
                     // The reason we are casting the IMP to a function pointer
                     // here is that if we use an IMP, ARC will retain the first
                     // 'id' argument of an IMP before calling it, because it's
                     // not defined as __unsafe_unretained.  That's obviously bad
-                    // in the middle of a -release call.
-                    void(*originalReleaseImpFunction)(__unsafe_unretained id s, SEL _c) =
-                        (typeof(originalReleaseImpFunction))originalRelease;
-                    originalReleaseImpFunction(impSelf, releaseSelector);
+                    // in the middle of a -dealloc call.
+                    void(*originalDeallocImpFunction)(__unsafe_unretained id s, SEL _c) =
+                        (typeof(originalDeallocImpFunction))originalDealloc;
+                    
+                    originalDeallocImpFunction(impSelf, deallocSelector);
                 } else {
-                    // There was no release method on this class originally.
-                    // Simulate the dynamic fallnig through to the superclass
-                    // release that would originally have happened.
-                    void(*superReleaseImpFunction)(__unsafe_unretained id s, SEL _c) =
-                        (typeof(superReleaseImpFunction))class_getMethodImplementation(class_getSuperclass(objectClass), releaseSelector);
-                    superReleaseImpFunction(impSelf, releaseSelector);
+                    // There was no dealloc method on this class originally.
+                    // Simulate the dynamic falling through to the superclass
+                    // dealloc that would originally have happened.
+                    void(*superDeallocImpFunction)(__unsafe_unretained id s, SEL _c) =
+                        (typeof(superDeallocImpFunction))class_getMethodImplementation(class_getSuperclass(objectClass), deallocSelector);
+                    
+                    superDeallocImpFunction(impSelf, deallocSelector);
                 }
             });
             
-            // Atomically replace the original release with our replacement IMP,
-            // made above. We put the original IMP, if any, into the
-            // originalRelease __block variable, so that it can be used later.
-            originalRelease = class_replaceMethod(objectClass,
-                                                  releaseSelector,
-                                                  doRelease,
-                                                  method_getTypeEncoding(releaseMethod));
+            const Method deallocMethod = class_getInstanceMethod(objectClass, deallocSelector);
+            const char *deallocTypeEncoding = method_getTypeEncoding(deallocMethod);
             
-            [releaseSwizzledClasses addObject:objectClass];
+            // Atomically replace the original dealloc with our replacement IMP,
+            // made above. This will ensure that, in the very unlikely event
+            // that someone else's code on another thread, is messing with the
+            // class's method list too, we have a valid -dealloc at all times
+            // (presuming it's doing things in a thread-safe manner too).
+            //
+            // If this returns NULL, there was no implementation originally,
+            // so the class inherited its superclass' one - we deal with that in
+            // replacementDeallocImp's implementation, above.
+            originalDealloc = class_replaceMethod(objectClass,
+                                                  deallocSelector,
+                                                  replacementDeallocImp,
+                                                  deallocTypeEncoding);
+            
+            [deallocSwizzledClasses addObject:objectClass];
         }
     }
     
+    // Lastly, we store a reference to ourselves in a list of observers for this
+    // object (creating it if necessary) so that we can look all the observers
+    // for an object up when ReplacementDealloc() is called (see implementation
+    // of ReplacementDealloc, above).
     NSHashTable *myObservers;
     
     NSMapTable *objectsToObservers = THObserverObjectsToObservers();

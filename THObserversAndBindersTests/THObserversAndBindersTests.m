@@ -8,6 +8,7 @@
 
 #import "THObserversAndBindersTests.h"
 #import "THOBTestSelfObservationTestObject.h"
+#import "THOBTestDeallocationVerifier.h"
 
 #import <THObserversAndBinders/THObserversAndBinders.h>
 
@@ -159,50 +160,64 @@
 
 - (void)testPlainChangeReleasingObservedDictionary
 {
-    // This will cause KVO to complain.  It's something the user should not do
-    // though - the observer should be released, or have -stopObserving called
-    // on it, before the observed object is released.
-    
     THObserver *observer = nil;
     
+    __weak NSDictionary *weakDictionary = nil;
     @autoreleasepool {
-        id object = [[NSDictionary alloc] init];
-        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+        // Interestingly, if an NSDictionary is used below (as opposed to an
+        // NSMutableDictionary), the 'not deallocated' assertion below fails.
+        // Maybe it's being optimised to a shared static dictionary?
+        NSDictionary *dictionary = [NSMutableDictionary dictionary];
+        weakDictionary = dictionary;
+        observer = [THObserver observerForObject:dictionary keyPath:@"testKey" block:^{}];
     }
     
-    NSLog(@"%@", observer);
+    STAssertNil(weakDictionary, @"Observed object not deallocated");
+    STAssertNotNil(observer, @"Observer not alive");
 }
 
 - (void)testPlainChangeReleasingObservedNSObject
 {
-    // This will cause KVO to complain.  It's something the user should not do
-    // though - the observer should be released, or have -stopObserving called
-    // on it, before the observed object is released.
-    
     THObserver *observer = nil;
     
+    __weak id weakObject = nil;
     @autoreleasepool {
         id object = [[NSObject alloc] init];
-        observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
+        weakObject = object;
+        observer = [THObserver observerForObject:object keyPath:@"testPlainChangeReleasingObservedNSObjectTestKey" block:^{}];
     }
     
-    NSLog(@"%@", observer);
+    STAssertNil(weakObject, @"Observed object not deallocated");
+    STAssertNotNil(observer, @"Observer not alive");
 }
 
 - (void)testPlainChangeReleasingObservedNSObjectSubclass
 {
-    // This will cause KVO to complain.  It's something the user should not do
-    // though - the observer should be released, or have -stopObserving called
-    // on it, before the observed object is released.
-    
     THObserver *observer = nil;
     
+    __weak id weakObject = nil;
     @autoreleasepool {
         id object = [[NSObjectSubclass alloc] init];
+        weakObject = object;
         observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
     }
     
-    NSLog(@"%@", observer);
+    STAssertNil(weakObject, @"Observed object not deallocated");
+    STAssertNotNil(observer, @"Observer not alive");
+}
+
+- (void)testObservedObjectDeallocation
+{
+    // Test that observed objects are being deallocated.
+    BOOL deallocated = NO;
+    @autoreleasepool {
+        THOBTestDeallocationVerifier *verifier = [[THOBTestDeallocationVerifier alloc] initWithDeallocationFlag:&deallocated];
+        @autoreleasepool {
+            THObserver *observer = [THObserver observerForObject:verifier keyPath:@"testProperty" block:^{}];
+            NSLog(@"%@", observer);
+        }
+    }
+    STAssertTrue(deallocated, @"THOBTestDeallocationVerifier did not set deallocation flag");
 }
 
 
