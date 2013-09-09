@@ -10,11 +10,6 @@
 
 #import <objc/message.h>
 #import <objc/runtime.h>
-#import <pthread.h>
-
-@interface NSObject (THObserverSwizzledDealloc)
-- (void)th_observerSwizzledRelease;
-@end
 
 @implementation THObserver {
     __weak id _observedObject;
@@ -108,6 +103,16 @@ typedef enum THObserverBlockArgumentsKind {
 #pragma mark -
 #pragma mark Magic Deregistration
 
+static NSMutableSet *THObserverReleaseSwizzledClasses(void)
+{
+    static NSMutableSet *sReleaseSwizzledClasses;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sReleaseSwizzledClasses = [NSMutableSet set];
+    });
+    return sReleaseSwizzledClasses;
+}
+
 static NSMapTable *THObserverObjectsToObservers(void)
 {
     static NSMapTable *sObjectsToObservers;
@@ -121,7 +126,7 @@ static NSMapTable *THObserverObjectsToObservers(void)
     return sObjectsToObservers;
 }
 
-static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
+static void ReplacementRelease(__unsafe_unretained id self)
 {
     if(CFGetRetainCount((__bridge CFTypeRef)self) == 1) {
         NSHashTable *myObservers = nil;
@@ -146,8 +151,6 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
             }
         }
     }
-    
-    [self th_observerSwizzledRelease];
 }
 
 - (void)_setUpMagicDeregistration
@@ -170,15 +173,9 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
     
     Class objectClass = [_observedObject class];
     
-    // Usint a mutex because we can't just @synchronized(objectClass) - there
-    // might be another thread modifying a subclass or superclass at the same
-    // time.
-    static pthread_mutex_t sClassIsSwizzledMutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&sClassIsSwizzledMutex);
-    {
-        // First, check if we've already swizzled this class (or a superclass).
-        const SEL swizzledReleaseSelector = @selector(th_observerSwizzledRelease);
-        if(!class_getInstanceMethod(objectClass, swizzledReleaseSelector)) {
+    NSMutableSet *releaseSwizzledClasses = THObserverReleaseSwizzledClasses();
+    @synchronized(releaseSwizzledClasses) {
+        if(![releaseSwizzledClasses containsObject:objectClass]) {
             const SEL releaseSelector = NSSelectorFromString(@"release");
             const Method releaseMethod = class_getInstanceMethod(objectClass, releaseSelector);
             
@@ -186,29 +183,47 @@ static void ReplacementRelease(__unsafe_unretained id self, SEL cmd)
             // thing to do under ARC is wrong, or changes, at least we'll
             // know when this assertion fails.
             NSParameterAssert(releaseMethod != NULL);
+
+            // To keep things thread-safe, we fill in the originalRelease later,
+            // with the result of the class_replaceMethod call.
+            __block IMP originalRelease;
             
-            const IMP originalImp = method_getImplementation(releaseMethod);
-            const IMP replacementImp = (IMP)ReplacementRelease;
+            IMP doRelease = imp_implementationWithBlock(^(__unsafe_unretained id impSelf) {
+                ReplacementRelease(impSelf);
+                
+                if(originalRelease) {
+                    // If there was a release at the time we replaced it with
+                    // this block, call it.  It will call [super release];.
+    
+                    // The reason we are casting the IMP to a function pointer
+                    // here is that if we use an IMP, ARC will retain the first
+                    // 'id' argument of an IMP before calling it, because it's
+                    // not defined as __unsafe_unretained.  That's obviously bad
+                    // in the middle of a -release call.
+                    void(*originalReleaseImpFunction)(__unsafe_unretained id s, SEL _c) =
+                        (typeof(originalReleaseImpFunction))originalRelease;
+                    originalReleaseImpFunction(impSelf, releaseSelector);
+                } else {
+                    // There was no release method on this class originally.
+                    // Simulate the dynamic fallnig through to the superclass
+                    // release that would originally have happened.
+                    void(*superReleaseImpFunction)(__unsafe_unretained id s, SEL _c) =
+                        (typeof(superReleaseImpFunction))class_getMethodImplementation(class_getSuperclass(objectClass), releaseSelector);
+                    superReleaseImpFunction(impSelf, releaseSelector);
+                }
+            });
             
-            const char *typeEncoding = method_getTypeEncoding(releaseMethod);
+            // Atomically replace the original release with our replacement IMP,
+            // made above. We put the original IMP, if any, into the
+            // originalRelease __block variable, so that it can be used later.
+            originalRelease = class_replaceMethod(objectClass,
+                                                  releaseSelector,
+                                                  doRelease,
+                                                  method_getTypeEncoding(releaseMethod));
             
-            // Add a -th_observerSwizzledRelease method with the
-            // original release method's implementation.
-            class_addMethod(objectClass,
-                            swizzledReleaseSelector,
-                            originalImp,
-                            typeEncoding);
-            
-            // Replace the original release with our ReplacementRelease
-            // (which will call -th_observerSwizzledRelease when
-            // it's done to get the original -release code to run).
-            class_replaceMethod(objectClass,
-                                releaseSelector,
-                                replacementImp,
-                                typeEncoding);
+            [releaseSwizzledClasses addObject:objectClass];
         }
     }
-    pthread_mutex_unlock(&sClassIsSwizzledMutex);
     
     NSHashTable *myObservers;
     
