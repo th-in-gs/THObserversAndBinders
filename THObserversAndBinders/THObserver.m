@@ -15,7 +15,7 @@
     // The reason this is __unsafe_unretained, rather than __weak, is so that
     // it's still valid when our magic deregistration routines, called from
     // the observed object's dealloc, fire.  If we use __weak, it's zeroed out
-    // before our coude runs.
+    // before our code runs.
     // This is still a weak reference in effect, because it'll be zeroed out
     // manually when the deregistration routines run.
     __unsafe_unretained id _observedObject;
@@ -71,7 +71,7 @@ typedef enum THObserverBlockArgumentsKind {
     
     // Remove ourselves from the list of active observers of this object (the
     // list that's used to to remove observers when an object deallocates - see
-    // the "Magic Deregistration" implementation for, below, for more
+    // the "Magic Deregistration" implementation, below, for more
     // explanation).
     NSHashTable *myObservers;
     
@@ -110,6 +110,7 @@ typedef enum THObserverBlockArgumentsKind {
             [NSException raise:NSInternalInconsistencyException format:@"%s called on %@ with unrecognised context (%p)", __func__, self, context];
     }
 }
+
 
 #pragma mark -
 #pragma mark Magic Deregistration
@@ -177,7 +178,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
     
     Class objectClass = [_observedObject class];
     
-    // We only need to do this once per class, so we store what classed we've
+    // We only need to do this once per class, so we store what classes we've
     // already done it to in deallocSwizzledClasses.
     NSMutableSet *deallocSwizzledClasses = THObserverDeallocSwizzledClasses();
     @synchronized(deallocSwizzledClasses) {
@@ -222,8 +223,8 @@ static void ReplacementDealloc(__unsafe_unretained id self)
             
             // Atomically replace the original dealloc with our replacement IMP,
             // made above. This will ensure that, in the very unlikely event
-            // that someone else's code on another thread, is messing with the
-            // class's method list too, we have a valid -dealloc at all times
+            // that someone else's code on another thread is messing with the
+            // class' method list too, we have a valid -dealloc at all times
             // (presuming it's doing things in a thread-safe manner too).
             //
             // If this returns NULL, there was no implementation originally,
@@ -238,10 +239,10 @@ static void ReplacementDealloc(__unsafe_unretained id self)
         }
     }
     
-    // Lastly, we store a reference to ourselves in a list of observers for this
-    // object (creating it if necessary) so that we can look all the observers
-    // for an object up when ReplacementDealloc() is called (see implementation
-    // of ReplacementDealloc, above).
+    // Store a reference to ourselves in a list of observers for this object
+    // (creating it if necessary) so that we can look all the observers for an
+    // object up when ReplacementDealloc() is called (see implementation of
+    // ReplacementDealloc, above).
     NSHashTable *myObservers;
     
     NSMapTable *objectsToObservers = THObserverObjectsToObservers();
@@ -257,6 +258,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
         [myObservers addObject:self];
     }
 }
+
 
 #pragma mark -
 #pragma mark Block-based observer construction.
