@@ -248,7 +248,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
     @synchronized(objectsToObservers) {
         myObservers = [objectsToObservers objectForKey:_observedObject];
         if(!myObservers) {
-            myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPersonality];
+            myObservers = [NSHashTable hashTableWithOptions:NSPointerFunctionsOpaqueMemory | NSPointerFunctionsObjectPointerPersonality];
             [objectsToObservers setObject:myObservers forKey:_observedObject];
         }
     }
