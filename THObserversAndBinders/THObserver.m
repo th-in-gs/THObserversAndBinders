@@ -221,7 +221,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
                     // 'id' argument of an IMP before calling it, because it's
                     // not defined as __unsafe_unretained.  That's obviously bad
                     // in the middle of a -dealloc call.
-                    void(*originalDeallocImpFunction)(__unsafe_unretained id s, SEL _c) =
+                    void(*originalDeallocImpFunction)(__unsafe_unretained id, SEL) =
                         (typeof(originalDeallocImpFunction))originalDealloc;
                     
                     originalDeallocImpFunction(impSelf, deallocSelector);
@@ -229,7 +229,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
                     // There was no dealloc method on this class originally.
                     // Simulate the dynamic falling through to the superclass
                     // dealloc that would originally have happened.
-                    void(*superDeallocImpFunction)(__unsafe_unretained id s, SEL _c) =
+                    void(*superDeallocImpFunction)(__unsafe_unretained id, SEL) =
                         (typeof(superDeallocImpFunction))class_getMethodImplementation(class_getSuperclass(objectClass), deallocSelector);
                     
                     superDeallocImpFunction(impSelf, deallocSelector);
