@@ -10,6 +10,7 @@
 
 #import <objc/message.h>
 #import <objc/runtime.h>
+#import <libkern/OSAtomic.h>
 
 @implementation THObserver {
     // The reason this is __unsafe_unretained, rather than __weak, is so that
@@ -188,10 +189,27 @@ static void ReplacementDealloc(__unsafe_unretained id self)
             // To keep things thread-safe, we fill in the originalDealloc later,
             // with the result of the class_replaceMethod call (see more comments
             // below).
-            __block IMP originalDealloc;
+            __block IMP originalDealloc = NULL;
+            __block volatile int32_t originalDeallocIsSet = 0;
             
             IMP replacementDeallocImp = imp_implementationWithBlock(^(__unsafe_unretained id impSelf) {
                 ReplacementDealloc(impSelf);
+                
+                while(OSAtomicAdd32(0, &originalDeallocIsSet) != 1) {
+                    // Just in case the originalDealloc isn't set yet, wait
+                    // until we know for sure that it is.
+                    //
+                    // Without a guard mechanism, it's possible that another
+                    // thread could call call dealloc between the call to
+                    // class_replaceMethod swizzling the methods and its
+                    // return value being set.  This would cause us to fall
+                    // through to super's dealloc erroneously, because
+                    // originalDealloc would still be NULL.
+                    //
+                    // Waiting by spinning should be fine - it's very
+                    // implausible that it wouldn' be set yet, and even if it's
+                    // not it will be very soon.
+                }
                 
                 if(originalDealloc) {
                     // If there was a dealloc at the time we replaced it with
@@ -234,6 +252,10 @@ static void ReplacementDealloc(__unsafe_unretained id self)
                                                   deallocSelector,
                                                   replacementDeallocImp,
                                                   deallocTypeEncoding);
+            
+            // Flag that we've set originalDealloc now (see comments in the
+            // replacementDeallocImp block).
+            OSAtomicIncrement32Barrier(&originalDeallocIsSet);
             
             [deallocSwizzledClasses addObject:objectClass];
         }
