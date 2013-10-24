@@ -11,9 +11,17 @@
 #import <objc/message.h>
 
 @implementation THObserver {
-    __weak id _observedObject;
     NSString *_keyPath;
     dispatch_block_t _block;
+    
+    // The reason this is __unsafe_unretained instead of __weak is so that, if
+    // -stopObserving: is called _during_ _observedObject's deallocation, this
+    // ivar won't be zeroed out yet, and so we'll still be able to use it to
+    // degister for notifications.
+    // This does mean that it won't be zeroed out automatically, but we'd be in
+    // a dangerous state if that happened anyway (we'd be still registered
+    // for KVO on a deallocated object).
+    __unsafe_unretained id _observedObject;
 }
 
 typedef enum THObserverBlockArgumentsKind {

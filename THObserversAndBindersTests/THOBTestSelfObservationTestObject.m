@@ -24,17 +24,10 @@
     return self;
 }
 
-- (void)stopObserving
-{
-    [_testObserver stopObserving];
-    _testObserver = nil; 
-}
-
 - (void)dealloc
 {
-    // How I wish this worked!
-    //[_testObserver stopObserving];
-    //_testObserver = nil;
+    [_testObserver stopObserving];
+    _testObserver = nil;
 }
 
 @end
