@@ -13,16 +13,14 @@
 #import <libkern/OSAtomic.h>
 
 @implementation THObserver {
+    NSString *_keyPath;
+    dispatch_block_t _block;
+    
     // The reason this is __unsafe_unretained, rather than __weak, is so that
     // it's still valid when our magic deregistration routines, called from
     // the observed object's dealloc, fire.  If we use __weak, it's zeroed out
     // before our code runs.
-    // This is still a weak reference in effect, because it'll be zeroed out
-    // manually when the deregistration routines run.
     __unsafe_unretained id _observedObject;
-    
-    NSString *_keyPath;
-    dispatch_block_t _block;
 }
 
 typedef enum THObserverBlockArgumentsKind {

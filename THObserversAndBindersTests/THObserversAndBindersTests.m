@@ -510,7 +510,10 @@
 {
     THOBTestSelfObservationTestObject *object = [[THOBTestSelfObservationTestObject alloc] init];
     NSLog(@"Test object: %@", object);
+<<<<<<< HEAD
     object.string = @"Setting the test string";
+=======
+>>>>>>> master
 }
 
 - (void)testBindingWithFormatter
