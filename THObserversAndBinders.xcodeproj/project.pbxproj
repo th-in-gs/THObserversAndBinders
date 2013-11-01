@@ -354,6 +354,7 @@
 					armv7,
 					x86_64,
 					armv7s,
+					arm64,
 				);
 				DSTROOT = /tmp/THObserversAndBinders.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -373,6 +374,7 @@
 					armv7,
 					x86_64,
 					armv7s,
+					arm64,
 				);
 				DSTROOT = /tmp/THObserversAndBinders.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
