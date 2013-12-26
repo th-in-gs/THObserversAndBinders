@@ -1,18 +1,19 @@
-syntax: glob
-
+# Xcode
 .DS_Store
-
-*.OABK
-
-*.swp
-*~.nib
-
-build
-
+*/build/*
 *.pbxuser
-*.mode?v?
-*.perspective
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
 *.perspectivev3
+!default.perspectivev3
 xcuserdata
-
-*.tokens
+profile
+*.moved-aside
+DerivedData
+.idea/
+*.hmap
+*.xcuserstate
+*.xccheckout
