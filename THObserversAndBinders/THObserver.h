@@ -17,18 +17,18 @@ typedef void(^THObserverBlock)(void);
 typedef void(^THObserverBlockWithOldAndNew)(id oldValue, id newValue);
 typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                  block:(THObserverBlock)block;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                            block:(THObserverBlock)block;
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-         oldAndNewBlock:(THObserverBlockWithOldAndNew)block;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                   oldAndNewBlock:(THObserverBlockWithOldAndNew)block;
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-            changeBlock:(THObserverBlockWithChangeDictionary)block;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                      changeBlock:(THObserverBlockWithChangeDictionary)block;
 
 #pragma mark -
 #pragma mark Target-action based observers.
@@ -56,16 +56,16 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 //
 // Both the observer and the target are weakly referenced internally.
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                 target:(id)target
-                 action:(SEL)action;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                           target:(id)target
+                           action:(SEL)action;
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-                 target:(id)target
-                 action:(SEL)action;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                           target:(id)target
+                           action:(SEL)action;
 
 
 // A second kind of target-action based observer; takes a selector with a
@@ -82,19 +82,19 @@ typedef void(^THObserverBlockWithChangeDictionary)(NSDictionary *change);
 //
 // Both the observer and the target are weakly referenced internally.
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                 target:(id)target
-            valueAction:(SEL)valueAction;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                           target:(id)target
+                      valueAction:(SEL)valueAction;
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-                 target:(id)target
-            valueAction:(SEL)valueAction;
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                           target:(id)target
+                      valueAction:(SEL)valueAction;
 
 
-#pragma mark - 
+#pragma mark -
 #pragma mark Lifetime management
 
 // This is a one-way street. Call it to stop the observer functioning.

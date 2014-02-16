@@ -30,11 +30,11 @@ typedef enum THObserverBlockArgumentsKind {
     THObserverBlockArgumentsChangeDictionary
 } THObserverBlockArgumentsKind;
 
-- (id)initForObject:(id)object
-            keyPath:(NSString *)keyPath
-            options:(NSKeyValueObservingOptions)options
-              block:(dispatch_block_t)block
- blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
+- (instancetype)initForObject:(id)object
+                      keyPath:(NSString *)keyPath
+                      options:(NSKeyValueObservingOptions)options
+                        block:(dispatch_block_t)block
+           blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
 {
     if((self = [super init])) {
         if(!object || !keyPath || !block) {
@@ -44,7 +44,7 @@ typedef enum THObserverBlockArgumentsKind {
             _observedObject = object;
             _keyPath = [keyPath copy];
             _block = [block copy];
-                        
+            
             [_observedObject addObserver:self
                               forKeyPath:_keyPath
                                  options:options
@@ -93,9 +93,9 @@ typedef enum THObserverBlockArgumentsKind {
 #pragma mark -
 #pragma mark Block-based observer construction.
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                  block:(THObserverBlock)block
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                            block:(THObserverBlock)block
 {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
@@ -104,9 +104,9 @@ typedef enum THObserverBlockArgumentsKind {
                     blockArgumentsKind:THObserverBlockArgumentsNone];
 }
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-         oldAndNewBlock:(THObserverBlockWithOldAndNew)block
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                   oldAndNewBlock:(THObserverBlockWithOldAndNew)block
 {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
@@ -115,10 +115,10 @@ typedef enum THObserverBlockArgumentsKind {
                     blockArgumentsKind:THObserverBlockArgumentsOldAndNew];
 }
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-            changeBlock:(THObserverBlockWithChangeDictionary)block
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                      changeBlock:(THObserverBlockWithChangeDictionary)block
 {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
@@ -147,20 +147,20 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return argumentCount;
 }
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-                 target:(id)target
-                 action:(SEL)action
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                           target:(id)target
+                           action:(SEL)action
 {
     id ret = nil;
     
     __weak id wTarget = target;
     __weak id wObject = object;
-
+    
     dispatch_block_t block = nil;
     THObserverBlockArgumentsKind blockArgumentsKind;
-
+    
     // Was doing this with an NSMethodSignature by calling
     // [target methodForSelector:action], but that will fail if the method
     // isn't defined on the target yet, beating ObjC's dynamism a bit.
@@ -238,10 +238,10 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return ret;
 }
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                 target:(id)target
-                 action:(SEL)action
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                           target:(id)target
+                           action:(SEL)action
 {
     return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
 }
@@ -250,16 +250,16 @@ static NSUInteger SelectorArgumentCount(SEL selector)
 #pragma mark -
 #pragma mark Value-only target-action observers.
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                options:(NSKeyValueObservingOptions)options
-                 target:(id)target
-            valueAction:(SEL)valueAction
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                          options:(NSKeyValueObservingOptions)options
+                           target:(id)target
+                      valueAction:(SEL)valueAction
 {
     id ret = nil;
     
     __weak id wTarget = target;
-
+    
     THObserverBlockWithChangeDictionary block = nil;
     
     NSUInteger actionArgumentCount = SelectorArgumentCount(valueAction);
@@ -287,7 +287,7 @@ static NSUInteger SelectorArgumentCount(SEL selector)
             break;
         case 3: {
             __weak id wObject = object;
-
+            
             options |= NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew;
             block = [^(NSDictionary *change) {
                 id msgTarget = wTarget;
@@ -312,10 +312,10 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return ret;
 }
 
-+ (id)observerForObject:(id)object
-                keyPath:(NSString *)keyPath
-                 target:(id)target
-            valueAction:(SEL)valueAction
++ (instancetype)observerForObject:(id)object
+                          keyPath:(NSString *)keyPath
+                           target:(id)target
+                      valueAction:(SEL)valueAction
 {
     return [self observerForObject:object keyPath:keyPath options:0 target:target valueAction:valueAction];
 }

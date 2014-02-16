@@ -12,20 +12,20 @@
 
 typedef id(^THBinderTransformationBlock)(id value);
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath;
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath;
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
-      valueTransformer:(NSValueTransformer *)valueTransformer;
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
+                valueTransformer:(NSValueTransformer *)valueTransformer;
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
-			 formatter:(NSFormatter *)formatter;
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
+                       formatter:(NSFormatter *)formatter;
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
-   transformationBlock:(THBinderTransformationBlock)transformationBlock;
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
+             transformationBlock:(THBinderTransformationBlock)transformationBlock;
 
 // This is a one-way street. Call it to stop the observer functioning.
 // The THBinder will do this cleanly when it deallocs, but calling it manually
