@@ -7,6 +7,7 @@
 //
 
 #import "THObserver.h"
+#import "THObserver+Private.h"
 
 #import <objc/message.h>
 
@@ -22,17 +23,34 @@
     // a dangerous state if that happened anyway (we'd be still registered
     // for KVO on a deallocated object).
     __unsafe_unretained id _observedObject;
+    
+    // Calback queues
+    NSOperationQueue *_operationQueue;
+    dispatch_queue_t _dispatchQueue;
 }
 
-typedef enum THObserverBlockArgumentsKind {
-    THObserverBlockArgumentsNone,
-    THObserverBlockArgumentsOldAndNew,
-    THObserverBlockArgumentsChangeDictionary
-} THObserverBlockArgumentsKind;
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+         operationQueue:(NSOperationQueue *)operationQueue
+          dispatchQueue:(dispatch_queue_t)dispatchQueue
+                  block:(dispatch_block_t)block
+     blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
+{
+    return [[self alloc] initForObject:object
+                               keyPath:keyPath
+                               options:options
+                        operationQueue:operationQueue
+                         dispatchQueue:dispatchQueue
+                                 block:block
+                    blockArgumentsKind:blockArgumentsKind];
+}
 
 - (id)initForObject:(id)object
             keyPath:(NSString *)keyPath
             options:(NSKeyValueObservingOptions)options
+     operationQueue:(NSOperationQueue *)operationQueue
+      dispatchQueue:(dispatch_queue_t)dispatchQueue
               block:(dispatch_block_t)block
  blockArgumentsKind:(THObserverBlockArgumentsKind)blockArgumentsKind
 {
@@ -44,7 +62,9 @@ typedef enum THObserverBlockArgumentsKind {
             _observedObject = object;
             _keyPath = [keyPath copy];
             _block = [block copy];
-                        
+            _operationQueue = operationQueue;
+            _dispatchQueue = dispatchQueue;
+            
             [_observedObject addObserver:self
                               forKeyPath:_keyPath
                                  options:options
@@ -67,6 +87,12 @@ typedef enum THObserverBlockArgumentsKind {
     _block = nil;
     _keyPath = nil;
     _observedObject = nil;
+    _operationQueue = nil;
+#if !OS_OBJECT_USE_OBJC
+    if (_dispatchQueue) {
+        dispatch_release(_dispatchQueue);
+    }
+#endif
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -76,19 +102,41 @@ typedef enum THObserverBlockArgumentsKind {
 {
     switch((THObserverBlockArgumentsKind)context) {
         case THObserverBlockArgumentsNone:
-            ((THObserverBlock)_block)();
+        {
+            [self executeNotificationFiredBlock:^{
+                ((THObserverBlock)_block)();
+            }];
+        }
             break;
         case THObserverBlockArgumentsOldAndNew:
-            ((THObserverBlockWithOldAndNew)_block)(change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+        {
+            [self executeNotificationFiredBlock:^{
+                ((THObserverBlockWithOldAndNew)_block)(change[NSKeyValueChangeOldKey], change[NSKeyValueChangeNewKey]);
+            }];
+        }
             break;
         case THObserverBlockArgumentsChangeDictionary:
-            ((THObserverBlockWithChangeDictionary)_block)(change);
+        {
+            [self executeNotificationFiredBlock:^{
+                ((THObserverBlockWithChangeDictionary)_block)(change);
+            }];
+        }
             break;
         default:
             [NSException raise:NSInternalInconsistencyException format:@"%s called on %@ with unrecognised context (%p)", __func__, self, context];
     }
 }
 
+- (void)executeNotificationFiredBlock:(dispatch_block_t)block
+{
+    if (_operationQueue) {
+        [_operationQueue addOperationWithBlock:block];
+    } else if (_dispatchQueue) {
+        dispatch_async(_dispatchQueue, block);
+    } else {
+        block();
+    }
+}
 
 #pragma mark -
 #pragma mark Block-based observer construction.
@@ -100,6 +148,8 @@ typedef enum THObserverBlockArgumentsKind {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
                                options:0
+                        operationQueue:nil
+                         dispatchQueue:nil
                                  block:(dispatch_block_t)block
                     blockArgumentsKind:THObserverBlockArgumentsNone];
 }
@@ -111,6 +161,8 @@ typedef enum THObserverBlockArgumentsKind {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
                                options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew
+                        operationQueue:nil
+                         dispatchQueue:nil
                                  block:(dispatch_block_t)block
                     blockArgumentsKind:THObserverBlockArgumentsOldAndNew];
 }
@@ -123,6 +175,8 @@ typedef enum THObserverBlockArgumentsKind {
     return [[self alloc] initForObject:object
                                keyPath:keyPath
                                options:options
+                        operationQueue:nil
+                         dispatchQueue:nil
                                  block:(dispatch_block_t)block
                     blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
 }
@@ -150,6 +204,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
                 options:(NSKeyValueObservingOptions)options
+         operationQueue:(NSOperationQueue *)operationQueue
+          dispatchQueue:(dispatch_queue_t)dispatchQueue
                  target:(id)target
                  action:(SEL)action
 {
@@ -231,6 +287,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         ret = [[self alloc] initForObject:object
                                   keyPath:keyPath
                                   options:options
+                           operationQueue:operationQueue
+                            dispatchQueue:dispatchQueue
                                     block:block
                        blockArgumentsKind:blockArgumentsKind];
     }
@@ -246,6 +304,20 @@ static NSUInteger SelectorArgumentCount(SEL selector)
     return [self observerForObject:object keyPath:keyPath options:0 target:target action:action];
 }
 
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+                 target:(id)target
+                 action:(SEL)action
+{
+    return [self observerForObject:object
+                           keyPath:keyPath
+                           options:0
+                    operationQueue:nil
+                     dispatchQueue:nil
+                            target:target
+                            action:action];
+}
 
 #pragma mark -
 #pragma mark Value-only target-action observers.
@@ -253,6 +325,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
 + (id)observerForObject:(id)object
                 keyPath:(NSString *)keyPath
                 options:(NSKeyValueObservingOptions)options
+         operationQueue:(NSOperationQueue *)operationQueue
+          dispatchQueue:(dispatch_queue_t)dispatchQueue
                  target:(id)target
             valueAction:(SEL)valueAction
 {
@@ -305,6 +379,8 @@ static NSUInteger SelectorArgumentCount(SEL selector)
         ret = [[self alloc] initForObject:object
                                   keyPath:keyPath
                                   options:options
+                           operationQueue:operationQueue
+                            dispatchQueue:dispatchQueue
                                     block:(dispatch_block_t)block
                        blockArgumentsKind:THObserverBlockArgumentsChangeDictionary];
     }
@@ -317,8 +393,28 @@ static NSUInteger SelectorArgumentCount(SEL selector)
                  target:(id)target
             valueAction:(SEL)valueAction
 {
-    return [self observerForObject:object keyPath:keyPath options:0 target:target valueAction:valueAction];
+    return [self observerForObject:object
+                           keyPath:keyPath
+                           options:0
+                    operationQueue:nil
+                     dispatchQueue:nil
+                            target:target
+                       valueAction:valueAction];
 }
 
++ (id)observerForObject:(id)object
+                keyPath:(NSString *)keyPath
+                options:(NSKeyValueObservingOptions)options
+                 target:(id)target
+            valueAction:(SEL)valueAction
+{
+    return [self observerForObject:object
+                           keyPath:keyPath
+                           options:options
+                    operationQueue:nil
+                     dispatchQueue:nil
+                            target:target
+                       valueAction:valueAction];
+}
 
 @end
