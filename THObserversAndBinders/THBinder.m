@@ -13,9 +13,9 @@
     THObserver *_observer;
 }
 
-- (id)initForBindingFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-                      toObject:(id)toObject keyPath:(NSString *)toKeyPath
-           transformationBlock:(THBinderTransformationBlock)transformationBlock
+- (instancetype)initForBindingFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                                toObject:(id)toObject keyPath:(NSString *)toKeyPath
+                     transformationBlock:(THBinderTransformationBlock)transformationBlock
 {
     if((self = [super init])) {
         __weak id wToObject = toObject;
@@ -48,17 +48,17 @@
     _observer = nil;
 }
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
 {
     return [[self alloc] initForBindingFromObject:fromObject keyPath:fromKeyPath
                                          toObject:toObject keyPath:toKeyPath
                               transformationBlock:nil];
 }
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
-      valueTransformer:(NSValueTransformer *)valueTransformer
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
+                valueTransformer:(NSValueTransformer *)valueTransformer
 {
     return [[self alloc] initForBindingFromObject:fromObject keyPath:fromKeyPath
                                          toObject:toObject keyPath:toKeyPath
@@ -67,16 +67,16 @@
                               }];
 }
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
-              toObject:(id)toObject keyPath:(NSString *)toKeyPath
-   transformationBlock:(THBinderTransformationBlock)transformationBlock
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath
+                        toObject:(id)toObject keyPath:(NSString *)toKeyPath
+             transformationBlock:(THBinderTransformationBlock)transformationBlock
 {
     return [[self alloc] initForBindingFromObject:fromObject keyPath:fromKeyPath
                                          toObject:toObject keyPath:toKeyPath
                               transformationBlock:transformationBlock];
 }
 
-+ (id)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath toObject:(id)toObject keyPath:(NSString *)toKeyPath formatter:(NSFormatter *)formatter;
++ (instancetype)binderFromObject:(id)fromObject keyPath:(NSString *)fromKeyPath toObject:(id)toObject keyPath:(NSString *)toKeyPath formatter:(NSFormatter *)formatter;
 {
 	return [[self alloc] initForBindingFromObject:fromObject keyPath:fromKeyPath
                                          toObject:toObject keyPath:toKeyPath
