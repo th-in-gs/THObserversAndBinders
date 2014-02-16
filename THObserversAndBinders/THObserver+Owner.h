@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 James Montgomerie. All rights reserved.
 //
 
-#import <THObserversAndBinders/THObserversAndBinders.h>
+#import "THObserver.h"
 
 /**
  This class aims at creating a clean and easy way to avoid holding
