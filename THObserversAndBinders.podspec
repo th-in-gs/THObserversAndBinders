@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.license      = { :type => 'MIT', :file => 'LICENSE' }
   s.author       = { "James Montgomerie" => "jamie@montgomerie.net" }
   s.source       = { :git => "https://github.com/th-in-gs/THObserversAndBinders.git", :tag => "1.0.0" }
-  s.source_files = 'THObserversAndBinders'
+  s.source_files = 'THObserversAndBinders', 'Helpers'
   s.requires_arc = true
   
   s.ios.deployment_target = '5.0'
