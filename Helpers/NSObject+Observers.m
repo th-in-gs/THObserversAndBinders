@@ -10,6 +10,7 @@
 #import <objc/runtime.h>
 
 static void *ObserverListKey;
+static void *BinderListKey;
 
 @implementation NSObject (Observers)
 
@@ -40,13 +41,47 @@ static void *ObserverListKey;
     }
 }
 
+- (NSMutableArray *)binderList
+{
+    @synchronized(self)
+    {
+        NSMutableArray *result =
+        objc_getAssociatedObject(self, &BinderListKey);
+        
+        //===
+        
+        if (!result)
+        {
+            result = [NSMutableArray array];
+            
+            objc_setAssociatedObject(self,
+                                     &BinderListKey,
+                                     result,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        
+        //===
+        
+        return result;
+    }
+}
+
 #pragma mark - Helpers
 
 - (void)removeObservers
 {
     @synchronized(self)
     {
-        [self.observerList makeObjectsPerformSelector:@selector(stopObserving)];
+        for (id item in self.observerList)
+        {
+            if ([item isKindOfClass:[THObserver class]])
+            {
+                [(THObserver *)item stopObserving];
+            }
+        }
+        
+        //===
+        
         [self.observerList removeAllObjects];
         
         //===
@@ -56,6 +91,37 @@ static void *ObserverListKey;
                                  nil,
                                  OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
+}
+
+- (void)removeBinders
+{
+    @synchronized(self)
+    {
+        for (id item in self.observerList)
+        {
+            if ([item isKindOfClass:[THBinder class]])
+            {
+                [(THBinder *)item stopBinding];
+            }
+        }
+        
+        //===
+        
+        [self.binderList removeAllObjects];
+        
+        //===
+        
+        objc_setAssociatedObject(self,
+                                 &BinderListKey,
+                                 nil,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+}
+
+- (void)removeObserversAndBinders
+{
+    [self removeObservers];
+    [self removeBinders];
 }
 
 @end

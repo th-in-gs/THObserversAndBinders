@@ -12,7 +12,10 @@
 @interface NSObject (Observers)
 
 @property (readonly, nonatomic) NSMutableArray *observerList;
+@property (readonly, nonatomic) NSMutableArray *binderList;
 
 - (void)removeObservers;
+- (void)removeBinders;
+- (void)removeObserversAndBinders;
 
 @end
