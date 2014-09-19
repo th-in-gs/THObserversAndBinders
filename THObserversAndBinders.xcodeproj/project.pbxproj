@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		501692B7186E104400556F91 /* NSObject+Observers.h in Headers */ = {isa = PBXBuildFile; fileRef = 501692B5186E104400556F91 /* NSObject+Observers.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		501692B8186E104400556F91 /* NSObject+Observers.m in Sources */ = {isa = PBXBuildFile; fileRef = 501692B6186E104400556F91 /* NSObject+Observers.m */; };
+		501692B7186E104400556F91 /* NSObject+OLDObservers.h in Headers */ = {isa = PBXBuildFile; fileRef = 501692B5186E104400556F91 /* NSObject+OLDObservers.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		501692B8186E104400556F91 /* NSObject+OLDObservers.m in Sources */ = {isa = PBXBuildFile; fileRef = 501692B6186E104400556F91 /* NSObject+OLDObservers.m */; };
+		50CD6CF019CC756C002FE09B /* NSObject+Observers.h in Headers */ = {isa = PBXBuildFile; fileRef = 50CD6CEE19CC756C002FE09B /* NSObject+Observers.h */; };
+		50CD6CF119CC756C002FE09B /* NSObject+Observers.m in Sources */ = {isa = PBXBuildFile; fileRef = 50CD6CEF19CC756C002FE09B /* NSObject+Observers.m */; };
 		7D7830191667A93600F83BC7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830181667A93600F83BC7 /* Foundation.framework */; };
 		7D7830281667A93600F83BC7 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830271667A93600F83BC7 /* SenTestingKit.framework */; };
 		7D78302A1667A93600F83BC7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D7830291667A93600F83BC7 /* UIKit.framework */; };
@@ -35,8 +37,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		501692B5186E104400556F91 /* NSObject+Observers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Observers.h"; sourceTree = "<group>"; };
-		501692B6186E104400556F91 /* NSObject+Observers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Observers.m"; sourceTree = "<group>"; };
+		501692B5186E104400556F91 /* NSObject+OLDObservers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+OLDObservers.h"; sourceTree = "<group>"; };
+		501692B6186E104400556F91 /* NSObject+OLDObservers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+OLDObservers.m"; sourceTree = "<group>"; };
+		50CD6CEE19CC756C002FE09B /* NSObject+Observers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+Observers.h"; sourceTree = "<group>"; };
+		50CD6CEF19CC756C002FE09B /* NSObject+Observers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+Observers.m"; sourceTree = "<group>"; };
 		7D7830151667A93600F83BC7 /* libTHObserversAndBinders.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTHObserversAndBinders.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D7830181667A93600F83BC7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		7D78301C1667A93600F83BC7 /* THObserversAndBinders-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "THObserversAndBinders-Prefix.pch"; sourceTree = "<group>"; };
@@ -84,8 +88,10 @@
 		5085FFD0186BC25D007B1CCD /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
-				501692B5186E104400556F91 /* NSObject+Observers.h */,
-				501692B6186E104400556F91 /* NSObject+Observers.m */,
+				50CD6CEE19CC756C002FE09B /* NSObject+Observers.h */,
+				50CD6CEF19CC756C002FE09B /* NSObject+Observers.m */,
+				501692B5186E104400556F91 /* NSObject+OLDObservers.h */,
+				501692B6186E104400556F91 /* NSObject+OLDObservers.m */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -171,7 +177,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				501692B7186E104400556F91 /* NSObject+Observers.h in Headers */,
+				501692B7186E104400556F91 /* NSObject+OLDObservers.h in Headers */,
+				50CD6CF019CC756C002FE09B /* NSObject+Observers.h in Headers */,
 				7D7830431667AA6800F83BC7 /* THObserver.h in Headers */,
 				7D7830451667B3F500F83BC7 /* THObserversAndBinders.h in Headers */,
 				7D7830481667E24E00F83BC7 /* THBinder.h in Headers */,
@@ -276,7 +283,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				501692B8186E104400556F91 /* NSObject+Observers.m in Sources */,
+				501692B8186E104400556F91 /* NSObject+OLDObservers.m in Sources */,
+				50CD6CF119CC756C002FE09B /* NSObject+Observers.m in Sources */,
 				7D7830441667AA6800F83BC7 /* THObserver.m in Sources */,
 				7D7830491667E24E00F83BC7 /* THBinder.m in Sources */,
 			);

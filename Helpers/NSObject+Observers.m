@@ -2,126 +2,107 @@
 //  NSObject+Observers.m
 //  THObserversAndBinders
 //
-//  Created by Maxim Khatskevich on 12/10/13.
-//  Copyright (c) 2013 Maxim Khatskevich. All rights reserved.
+//  Created by Maxim Khatskevich on 19/09/14.
+//  Copyright (c) 2014 James Montgomerie. All rights reserved.
 //
 
 #import "NSObject+Observers.h"
 #import <objc/runtime.h>
 
-static void *ObserverListKey;
-static void *BinderListKey;
+static void *ObserversKey;
+
+//===
 
 @implementation NSObject (Observers)
 
 #pragma mark - Property accessors
 
-- (NSMutableArray *)observerList
+- (NSMapTable *)observers
 {
-    @synchronized(self)
+    NSMapTable *result =
+    objc_getAssociatedObject(self, &ObserversKey);
+    
+    //===
+    
+    if (!result)
     {
-        NSMutableArray *result =
-        objc_getAssociatedObject(self, &ObserverListKey);
-        
-        //===
-        
-        if (!result)
-        {
-            result = [NSMutableArray array];
-            
-            objc_setAssociatedObject(self,
-                                     &ObserverListKey,
-                                     result,
-                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        }
-        
-        //===
-        
-        return result;
-    }
-}
-
-- (NSMutableArray *)binderList
-{
-    @synchronized(self)
-    {
-        NSMutableArray *result =
-        objc_getAssociatedObject(self, &BinderListKey);
-        
-        //===
-        
-        if (!result)
-        {
-            result = [NSMutableArray array];
-            
-            objc_setAssociatedObject(self,
-                                     &BinderListKey,
-                                     result,
-                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        }
-        
-        //===
-        
-        return result;
-    }
-}
-
-#pragma mark - Helpers
-
-- (void)removeObservers
-{
-    @synchronized(self)
-    {
-        for (id item in self.observerList)
-        {
-            if ([item isKindOfClass:[THObserver class]])
-            {
-                [(THObserver *)item stopObserving];
-            }
-        }
-        
-        //===
-        
-        [self.observerList removeAllObjects];
-        
-        //===
+        result = [NSMapTable weakToStrongObjectsMapTable];
         
         objc_setAssociatedObject(self,
-                                 &ObserverListKey,
-                                 nil,
+                                 &ObserversKey,
+                                 result,
                                  OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
+    
+    //===
+    
+    return result;
 }
 
-- (void)removeBinders
+#pragma mark - Private
+
+- (void)storeObserver:(THObserver *)observer forObject:(id)object
 {
-    @synchronized(self)
+    id theKey = object;
+    
+    NSMutableArray *relatedObservers = [self.observers objectForKey:theKey];
+    
+    if (!relatedObservers)
     {
-        for (id item in self.observerList)
-        {
-            if ([item isKindOfClass:[THBinder class]])
-            {
-                [(THBinder *)item stopBinding];
-            }
-        }
-        
-        //===
-        
-        [self.binderList removeAllObjects];
-        
-        //===
-        
-        objc_setAssociatedObject(self,
-                                 &BinderListKey,
-                                 nil,
-                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        relatedObservers = [NSMutableArray array];
     }
+    
+    [relatedObservers addObject:observer];
+    
+    [self.observers setObject:relatedObservers forKey:theKey];
 }
 
-- (void)removeObserversAndBinders
+#pragma mark - Public
+
+- (void)addObserverForObject:(id)object
+                     keyPath:(NSString *)keyPath
+                       block:(THObserverBlock)block
 {
-    [self removeObservers];
-    [self removeBinders];
+    THObserver *observer =
+    [THObserver
+     observerForObject:object
+     keyPath:keyPath
+     block:block];
+    
+    [self storeObserver:observer forObject:object];
+}
+
+- (void)addObserverForObject:(id)object
+                     keyPath:(NSString *)keyPath
+              oldAndNewBlock:(THObserverBlockWithOldAndNew)block
+{
+    THObserver *observer =
+    [THObserver
+     observerForObject:object
+     keyPath:keyPath
+     oldAndNewBlock:block];
+    
+    [self storeObserver:observer forObject:object];
+}
+
+- (void)addObserverForObject:(id)object
+                     keyPath:(NSString *)keyPath
+                     options:(NSKeyValueObservingOptions)options
+                 changeBlock:(THObserverBlockWithChangeDictionary)block
+{
+    THObserver *observer =
+    [THObserver
+     observerForObject:object
+     keyPath:keyPath
+     options:options
+     changeBlock:block];
+    
+    [self storeObserver:observer forObject:object];
+}
+
+- (void)removeObserversForObject:(id)object
+{
+    [self.observers removeObjectForKey:object];
 }
 
 @end
