@@ -59,6 +59,11 @@ static void *ObserversKey;
 
 #pragma mark - Public
 
+- (void)removeObserversForObject:(id)object
+{
+    [self.observers removeObjectForKey:object];
+}
+
 - (void)addObserverForObject:(id)object
                      keyPath:(NSString *)keyPath
                        block:(THObserverBlock)block
@@ -98,11 +103,6 @@ static void *ObserversKey;
      changeBlock:block];
     
     [self storeObserver:observer forObject:object];
-}
-
-- (void)removeObserversForObject:(id)object
-{
-    [self.observers removeObjectForKey:object];
 }
 
 @end
