@@ -74,7 +74,7 @@ typedef enum THObserverBlockArgumentsKind {
                         change:(NSDictionary *)change
                        context:(void *)context
 {
-    switch((THObserverBlockArgumentsKind)context) {
+    switch((THObserverBlockArgumentsKind)(intptr_t)context) {
         case THObserverBlockArgumentsNone:
             ((THObserverBlock)_block)();
             break;

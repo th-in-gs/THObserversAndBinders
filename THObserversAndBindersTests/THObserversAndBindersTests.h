@@ -6,8 +6,8 @@
 //  Copyright (c) 2012 James Montgomerie. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
-@interface THObserversAndBindersTests : SenTestCase
+@interface THObserversAndBindersTests : XCTestCase
 
 @end
