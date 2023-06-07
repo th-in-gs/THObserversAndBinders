@@ -82,7 +82,7 @@
     
     test[@"notTestKey"] = @"changedKey";
     
-    STAssertFalse(triggered, @"Changing a non-observed keypath triggered an observation");
+    XCTAssertFalse(triggered, @"Changing a non-observed keypath triggered an observation");
     
     [observer stopObserving];
 }
@@ -100,7 +100,7 @@
 
     test[@"testKey"] = @"changedValue";
     
-    STAssertFalse(triggered, @"Changing an observed keypath after removing the observer triggered an observation.");
+    XCTAssertFalse(triggered, @"Changing an observed keypath after removing the observer triggered an observation.");
 }
 
 - (void)testPlainChange
@@ -114,7 +114,7 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(triggered, @"Changing an observed keypath did not trigger an observation.");
+    XCTAssertTrue(triggered, @"Changing an observed keypath did not trigger an observation.");
     
     [observer stopObserving];
 }
@@ -125,15 +125,15 @@
     
     __block BOOL triggered = NO;
     THObserver *observer = [THObserver observerForObject:test keyPath:@"testKey" oldAndNewBlock:^(id oldValue, id newValue) {
-        STAssertEqualObjects(@"testValue", oldValue, @"Old value is not correct");
-        STAssertEqualObjects(@"changedValue", newValue, @"New value is not correct");
+        XCTAssertEqualObjects(@"testValue", oldValue, @"Old value is not correct");
+        XCTAssertEqualObjects(@"changedValue", newValue, @"New value is not correct");
         
         triggered = YES;
     }];
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(triggered, @"Changing an observed keypath did not trigger an observation");
+    XCTAssertTrue(triggered, @"Changing an observed keypath did not trigger an observation");
     
     [observer stopObserving];
 }
@@ -147,12 +147,12 @@
                                                  keyPath:@"testKey"
                                                  options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
                                              changeBlock:^(NSDictionary *change) {
-                                                 STAssertNotNil(change, @"Change dictionary is nil");
-                                                 STAssertEqualObjects(@"testValue", change[NSKeyValueChangeNewKey], @"Reported value is not correct");
+                                                 XCTAssertNotNil(change, @"Change dictionary is nil");
+                                                 XCTAssertEqualObjects(@"testValue", change[NSKeyValueChangeNewKey], @"Reported value is not correct");
                                                  triggered = YES;
                                              }];
     
-    STAssertTrue(triggered, @"Using NSKeyValueObservingOptionInitial did not trigger an initial observation");
+    XCTAssertTrue(triggered, @"Using NSKeyValueObservingOptionInitial did not trigger an initial observation");
     
     [observer stopObserving];
 }
@@ -240,14 +240,14 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(test0ArgTargetActionCallbackTriggered, @"0 argument action not called as expected");
+    XCTAssertTrue(test0ArgTargetActionCallbackTriggered, @"0 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_1ArgTargetActionCallback:(id)object
 {
-    STAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
+    XCTAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
                          @"Object is not as expected");
     
     test1ArgTargetActionCallbackTriggered = YES;
@@ -264,16 +264,16 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(test1ArgTargetActionCallbackTriggered, @"1 argument action not called as expected");
+    XCTAssertTrue(test1ArgTargetActionCallbackTriggered, @"1 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_2ArgTargetActionCallback:(id)object keyPath:(NSString *)keyPath
 {
-    STAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
+    XCTAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
                          @"Object is not as expected");
-    STAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
+    XCTAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
     
     test2ArgTargetActionCallbackTriggered = YES;
 }
@@ -289,7 +289,7 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(test2ArgTargetActionCallbackTriggered, @"2 argument action not called as expected");
+    XCTAssertTrue(test2ArgTargetActionCallbackTriggered, @"2 argument action not called as expected");
     
     [observer stopObserving];
 }
@@ -297,10 +297,10 @@
 
 - (void)_3ArgTargetActionCallback:(id)object keyPath:(NSString *)keyPath change:(NSDictionary *)change
 {
-    STAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
+    XCTAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
                          @"Object is not as expected");
-    STAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
-    STAssertEquals([change count], (NSUInteger)1,
+    XCTAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
+    XCTAssertEqual([change count], (NSUInteger)1,
                    @"Expected only one entry in the change dictionary since no options specified");
     
     test3ArgTargetActionCallbackTriggered = YES;
@@ -317,17 +317,17 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(test3ArgTargetActionCallbackTriggered, @"3 argument action not called as expected");
+    XCTAssertTrue(test3ArgTargetActionCallbackTriggered, @"3 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_3ArgTargetActionPriorCallback:(id)object keyPath:(NSString *)keyPath change:(NSDictionary *)change
 {
-    STAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"testValue" forKey:@"testKey"],
+    XCTAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"testValue" forKey:@"testKey"],
                          @"Object is not as expected");
-    STAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
-    STAssertEqualObjects(@"testValue", change[NSKeyValueChangeNewKey], @"Reported value is not correct");
+    XCTAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
+    XCTAssertEqualObjects(@"testValue", change[NSKeyValueChangeNewKey], @"Reported value is not correct");
 
     test3ArgTargetActionPriorCallbackTriggered = YES;
 }
@@ -342,18 +342,18 @@
                                                   target:self
                                                   action:@selector(_3ArgTargetActionPriorCallback:keyPath:change:)];
     
-    STAssertTrue(test3ArgTargetActionPriorCallbackTriggered, @"3 argument action not called as expected");
+    XCTAssertTrue(test3ArgTargetActionPriorCallbackTriggered, @"3 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_4ArgTargetActionCallback:(id)object keyPath:(NSString *)keyPath oldValue:(id)oldValue newValue:(id)newValue
 {
-    STAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
+    XCTAssertEqualObjects(object, [NSMutableDictionary dictionaryWithObject:@"changedValue" forKey:@"testKey"],
                          @"Object is not as expected");
-    STAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
-    STAssertEqualObjects(@"testValue", oldValue, @"Old value is not correct");
-    STAssertEqualObjects(@"changedValue", newValue, @"New value is not correct");
+    XCTAssertEqualObjects(keyPath, @"testKey", @"Keypath is not as expected");
+    XCTAssertEqualObjects(@"testValue", oldValue, @"Old value is not correct");
+    XCTAssertEqualObjects(@"changedValue", newValue, @"New value is not correct");
     
     test4ArgTargetActionCallbackTriggered = YES;
 }
@@ -369,14 +369,14 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(test4ArgTargetActionCallbackTriggered, @"4 argument action not called as expected");
+    XCTAssertTrue(test4ArgTargetActionCallbackTriggered, @"4 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_targetActionCallbackForNewValue:(id)value
 {
-    STAssertEqualObjects(value, @"changedValue", @"Object is not as expected");
+    XCTAssertEqualObjects(value, @"changedValue", @"Object is not as expected");
     
     testTargetValueActionNewTrigered = YES;
 }
@@ -392,15 +392,15 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(testTargetValueActionNewTrigered, @"1 argument action not called as expected");
+    XCTAssertTrue(testTargetValueActionNewTrigered, @"1 argument action not called as expected");
     
     [observer stopObserving];
 }
 
 - (void)_targetActionCallbackForOldValue:(id)oldValue newValue:(id)newValue
 {
-    STAssertEqualObjects(oldValue, @"testValue", @"Object is not as expected");
-    STAssertEqualObjects(newValue, @"changedValue", @"Object is not as expected");
+    XCTAssertEqualObjects(oldValue, @"testValue", @"Object is not as expected");
+    XCTAssertEqualObjects(newValue, @"changedValue", @"Object is not as expected");
     
     testTargetValueActionOldAndNewTrigered = YES;
 }
@@ -416,7 +416,7 @@
     
     test[@"testKey"] = @"changedValue";
     
-    STAssertTrue(testTargetValueActionOldAndNewTrigered, @"2 argument action not called as expected");
+    XCTAssertTrue(testTargetValueActionOldAndNewTrigered, @"2 argument action not called as expected");
     
     [observer stopObserving];
 }
@@ -435,7 +435,7 @@
     
     testFrom[@"testFromKey"] = @"changedValue";
     
-    STAssertEqualObjects(testTo[@"testToKey"], @"changedValue", @"New value in to object is not correct");
+    XCTAssertEqualObjects(testTo[@"testToKey"], @"changedValue", @"New value in to object is not correct");
     
     [binder stopBinding];
 }
@@ -452,7 +452,7 @@
     
     testFrom[@"testFromKey"] = @"changedValue";
     
-    STAssertEqualObjects(testTo[@"testToKey"], @"testToValue", @"New value in to object has changed");
+    XCTAssertEqualObjects(testTo[@"testToKey"], @"testToValue", @"New value in to object has changed");
 }
 
 - (void)testSimpleKeypathBinding
@@ -467,7 +467,7 @@
     
     testFrom[@"testFromKey"][@"testFromKey"] = @"changedValue";
     
-    STAssertEqualObjects(testTo[@"testToKey"][@"testToKey"], @"changedValue", @"New value in to object is not correct");
+    XCTAssertEqualObjects(testTo[@"testToKey"][@"testToKey"], @"changedValue", @"New value in to object is not correct");
     
     [binder stopBinding];
 }
@@ -483,7 +483,7 @@
     
     testFrom[@"testFromKey"] = @5;
         
-    STAssertEqualObjects(testTo[@"testToKey"], @6, @"Transformed value in to object is not correct");
+    XCTAssertEqualObjects(testTo[@"testToKey"], @6, @"Transformed value in to object is not correct");
     
     [binder stopBinding];
 }
@@ -501,7 +501,7 @@
     
     testFrom[@"testFromKey"] = @5;
     
-    STAssertEqualObjects(testTo[@"testToKey"], @10, @"Transformed value in to object is not correct");
+    XCTAssertEqualObjects(testTo[@"testToKey"], @10, @"Transformed value in to object is not correct");
     
     [binder stopBinding];
 }
@@ -530,7 +530,7 @@
 
     testFrom[@"testFromKey"] = @5;
 
-    STAssertEqualObjects(testTo[@"testToKey"], @"5", @"Transformed value in to object is not correct");
+    XCTAssertEqualObjects(testTo[@"testToKey"], @"5", @"Transformed value in to object is not correct");
 
     [binder stopBinding];
 }
