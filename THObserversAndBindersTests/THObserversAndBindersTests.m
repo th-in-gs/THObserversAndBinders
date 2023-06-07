@@ -172,8 +172,8 @@
         observer = [THObserver observerForObject:dictionary keyPath:@"testKey" block:^{}];
     }
     
-    STAssertNil(weakDictionary, @"Observed object not deallocated");
-    STAssertNotNil(observer, @"Observer not alive");
+    XCTAssertNil(weakDictionary, @"Observed object not deallocated");
+    XCTAssertNotNil(observer, @"Observer not alive");
 }
 
 - (void)testPlainChangeReleasingObservedNSObject
@@ -187,8 +187,8 @@
         observer = [THObserver observerForObject:object keyPath:@"testPlainChangeReleasingObservedNSObjectTestKey" block:^{}];
     }
     
-    STAssertNil(weakObject, @"Observed object not deallocated");
-    STAssertNotNil(observer, @"Observer not alive");
+    XCTAssertNil(weakObject, @"Observed object not deallocated");
+    XCTAssertNotNil(observer, @"Observer not alive");
 }
 
 - (void)testPlainChangeReleasingObservedNSObjectSubclass
@@ -202,8 +202,8 @@
         observer = [THObserver observerForObject:object keyPath:@"testKey" block:^{}];
     }
     
-    STAssertNil(weakObject, @"Observed object not deallocated");
-    STAssertNotNil(observer, @"Observer not alive");
+    XCTAssertNil(weakObject, @"Observed object not deallocated");
+    XCTAssertNotNil(observer, @"Observer not alive");
 }
 
 - (void)testObservedObjectDeallocation
@@ -217,7 +217,7 @@
             NSLog(@"%@", observer);
         }
     }
-    STAssertTrue(deallocated, @"THOBTestDeallocationVerifier did not set deallocation flag");
+    XCTAssertTrue(deallocated, @"THOBTestDeallocationVerifier did not set deallocation flag");
 }
 
 
@@ -510,10 +510,7 @@
 {
     THOBTestSelfObservationTestObject *object = [[THOBTestSelfObservationTestObject alloc] init];
     NSLog(@"Test object: %@", object);
-<<<<<<< HEAD
     object.string = @"Setting the test string";
-=======
->>>>>>> master
 }
 
 - (void)testBindingWithFormatter

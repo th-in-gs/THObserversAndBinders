@@ -10,7 +10,7 @@
 
 #import <objc/message.h>
 #import <objc/runtime.h>
-#import <libkern/OSAtomic.h>
+#import <stdatomic.h>
 
 @implementation THObserver {
     NSString *_keyPath;
@@ -188,12 +188,12 @@ static void ReplacementDealloc(__unsafe_unretained id self)
             // with the result of the class_replaceMethod call (see more comments
             // below).
             __block IMP originalDealloc = NULL;
-            __block volatile int32_t originalDeallocIsSet = 0;
+            __block _Atomic BOOL originalDeallocIsSet = NO;
             
             IMP replacementDeallocImp = imp_implementationWithBlock(^(__unsafe_unretained id impSelf) {
                 ReplacementDealloc(impSelf);
                 
-                while(OSAtomicAdd32(0, &originalDeallocIsSet) != 1) {
+                while(!atomic_load(&originalDeallocIsSet)) {
                     // Just in case the originalDealloc isn't set yet, wait
                     // until we know for sure that it is.
                     //
@@ -253,7 +253,7 @@ static void ReplacementDealloc(__unsafe_unretained id self)
             
             // Flag that we've set originalDealloc now (see comments in the
             // replacementDeallocImp block).
-            OSAtomicIncrement32Barrier(&originalDeallocIsSet);
+            atomic_store(&originalDeallocIsSet, true);
             
             [deallocSwizzledClasses addObject:objectClass];
         }
